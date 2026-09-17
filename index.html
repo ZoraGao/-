@@ -1,0 +1,4446 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>鼠鼠模拟器 - 夜晚事件原型</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #111318;
+      --panel: #1b1f28;
+      --panel-2: #252b36;
+      --text: #f6f0e6;
+      --muted: #b8afa2;
+      --line: rgba(255, 255, 255, .14);
+      --accent: #8dd6ff;
+      --warn: #ffd166;
+      --good: #7bd88f;
+      --bad: #ff7a6c;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(circle at 10% 8%, rgba(141, 214, 255, .12), transparent 28rem),
+        radial-gradient(circle at 92% 88%, rgba(255, 209, 102, .1), transparent 28rem),
+        var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    button {
+      border: 0;
+      color: inherit;
+      font: inherit;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .game {
+      width: min(100vw, 530px);
+      min-height: 100vh;
+      padding: 16px;
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+      gap: 12px;
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018));
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    h1 { margin: 0; font-size: 22px; letter-spacing: 0; }
+    .subtitle { margin-top: 3px; color: var(--muted); font-size: 13px; }
+
+    .primary {
+      min-width: 86px;
+      padding: 10px 13px;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #071016;
+      font-weight: 800;
+      box-shadow: 0 9px 26px rgba(141, 214, 255, .18);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      padding: 8px;
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 10px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.025)),
+        rgba(12, 14, 19, .56);
+      box-shadow: inset 0 1px rgba(255,255,255,.08), 0 12px 30px rgba(0,0,0,.18);
+    }
+
+    .stat {
+      position: relative;
+      overflow: hidden;
+      min-height: 70px;
+      padding: 9px 10px 10px;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 8px;
+      background:
+        linear-gradient(160deg, rgba(255,255,255,.075), rgba(255,255,255,.018) 58%),
+        rgba(27, 31, 40, .9);
+      box-shadow: inset 0 1px rgba(255,255,255,.08);
+    }
+
+    .stat::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 10px;
+      bottom: 10px;
+      width: 3px;
+      border-radius: 0 999px 999px 0;
+      background: var(--tone, var(--accent));
+      opacity: .9;
+    }
+
+    .stat::after {
+      content: attr(data-icon);
+      position: absolute;
+      right: 8px;
+      top: 7px;
+      color: var(--tone, var(--accent));
+      font-size: 14px;
+      font-weight: 900;
+      opacity: .72;
+    }
+
+    .stat-date { --tone: var(--warn); }
+    .stat-work { --tone: #8dd6ff; }
+    .stat-salary { --tone: #b9fbc0; }
+    .stat-cash { --tone: #ffd166; }
+    .stat-hair { --tone: #d4bfff; }
+    .stat-mood { --tone: #ffafcc; }
+    .stat-peer { --tone: #9bf6ff; }
+    .stat-clean { --tone: #cbd5e1; }
+
+    .stat.is-muted {
+      opacity: .48;
+      filter: grayscale(.8);
+    }
+
+    .stat-date {
+      background:
+        linear-gradient(160deg, rgba(255,209,102,.16), rgba(255,255,255,.018) 58%),
+        rgba(27, 31, 40, .9);
+    }
+
+    .label {
+      padding-right: 16px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 750;
+      line-height: 1.2;
+    }
+
+    .value {
+      margin-top: 7px;
+      color: #fffaf0;
+      font-size: 22px;
+      line-height: 1.02;
+      font-weight: 900;
+      letter-spacing: 0;
+      font-variant-numeric: tabular-nums;
+      text-wrap: balance;
+      text-shadow: 0 2px 12px rgba(0,0,0,.25);
+    }
+
+    .stat-date .value {
+      color: var(--warn);
+      font-size: 19px;
+      line-height: 1.15;
+      white-space: pre-line;
+    }
+
+    .stat-salary,
+    .stat-cash {
+      grid-column: span 1;
+    }
+
+    .stage {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background:
+        linear-gradient(90deg, transparent 31px, rgba(255,255,255,.045) 32px),
+        linear-gradient(0deg, transparent 31px, rgba(255,255,255,.035) 32px),
+        #171a21;
+      background-size: 32px 32px;
+      min-height: 510px;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    .stage-title {
+      padding: 12px 14px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .mode {
+      padding: 5px 8px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.08);
+      color: var(--warn);
+      white-space: nowrap;
+    }
+
+    .board {
+      position: relative;
+      height: min(72vh, 482px);
+      min-height: 450px;
+    }
+
+    .hole {
+      position: absolute;
+      left: var(--x);
+      top: var(--y);
+      width: 62px;
+      height: 62px;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(circle at 50% 55%, #000 0 34%, #16181e 35% 49%, #303541 50% 58%, rgba(255,255,255,.09) 59% 65%, transparent 66%);
+      transition: filter .15s ease, scale .15s ease;
+    }
+
+    .hole::before {
+      content: attr(data-name);
+      position: absolute;
+      bottom: -22px;
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .hole:not(.blocked):not(.current):hover { filter: brightness(1.18); scale: 1.04; }
+
+    .hole.exit {
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(123,216,143,.22), rgba(123,216,143,.06)), #101911;
+      border: 2px solid rgba(123,216,143,.55);
+    }
+
+    .hole.exit::after {
+      content: "出口";
+      color: var(--good);
+      font-weight: 900;
+      font-size: 13px;
+    }
+
+    .hole.blocked {
+      background:
+        radial-gradient(circle at 45% 38%, #d1d5db 0 18%, #9ca3af 19% 38%, #6b7280 39% 55%, #353b45 56% 70%, transparent 71%);
+      cursor: default;
+    }
+
+    .hole.blocked::after {
+      content: "";
+      position: absolute;
+      inset: 18px 13px 12px 14px;
+      border-radius: 45% 55% 47% 53%;
+      background: rgba(255,255,255,.16);
+      transform: rotate(-18deg);
+    }
+
+    .hole.current { outline: 3px solid rgba(255,209,102,.74); outline-offset: 4px; }
+
+    .crawler {
+      position: absolute;
+      left: var(--cx);
+      top: var(--cy);
+      width: 76px;
+      height: 50px;
+      transform: translate(-50%, -50%);
+      z-index: 6;
+      pointer-events: none;
+      transition: left .72s cubic-bezier(.2,.8,.2,1), top .72s cubic-bezier(.2,.8,.2,1), rotate .72s ease;
+    }
+
+    .mouse {
+      position: relative;
+      left: 14px;
+      top: 11px;
+      width: 48px;
+      height: 28px;
+      border-radius: 48% 56% 48% 52%;
+      background:
+        radial-gradient(circle at 30% 36%, rgba(255,255,255,.24) 0 8%, transparent 9%),
+        linear-gradient(90deg, #bd8b64, #7d573f);
+      box-shadow: inset 9px 0 rgba(255,255,255,.1), 0 8px 16px rgba(0,0,0,.3);
+    }
+
+    .ears {
+      position: absolute;
+      left: 4px;
+      top: -7px;
+      display: flex;
+      gap: 20px;
+      pointer-events: none;
+    }
+
+    .ears i {
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #f0b3a0 0 38%, #9b6a4d 40% 100%);
+      border: 1px solid rgba(0,0,0,.15);
+    }
+
+    .eyes { position: absolute; top: 8px; left: 12px; display: flex; gap: 12px; }
+    .eyes i {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #1f1714;
+      box-shadow: 0 0 0 1px rgba(255,255,255,.35);
+    }
+
+    .cheeks {
+      position: absolute;
+      left: 8px;
+      right: 12px;
+      top: 18px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .cheeks i {
+      width: 7px;
+      height: 4px;
+      border-radius: 50%;
+      background: rgba(255,139,139,.58);
+    }
+
+    .nose {
+      position: absolute;
+      right: 4px;
+      top: 12px;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #2b1a18;
+    }
+
+    .whiskers {
+      position: absolute;
+      right: -12px;
+      top: 12px;
+      width: 24px;
+      height: 12px;
+      pointer-events: none;
+    }
+
+    .whiskers i {
+      position: absolute;
+      left: 0;
+      width: 24px;
+      height: 1px;
+      background: rgba(238,205,180,.78);
+      transform-origin: left center;
+    }
+
+    .whiskers i:nth-child(1) { top: 1px; rotate: -15deg; }
+    .whiskers i:nth-child(2) { top: 6px; }
+    .whiskers i:nth-child(3) { top: 11px; rotate: 15deg; }
+
+    .tail {
+      position: absolute;
+      left: -24px;
+      top: 14px;
+      width: 31px;
+      height: 15px;
+      border-bottom: 3px solid #d39a8d;
+      border-radius: 50%;
+      transform-origin: right center;
+    }
+
+    .feet { position: absolute; inset: 0; }
+    .feet i {
+      position: absolute;
+      width: 9px;
+      height: 5px;
+      border-radius: 99px;
+      background: #6e4935;
+      transform-origin: center;
+    }
+
+    .feet i:nth-child(1) { left: 10px; top: 23px; rotate: 12deg; animation-delay: 0s; }
+    .feet i:nth-child(2) { left: 27px; top: 24px; rotate: -8deg; animation-delay: -.12s; }
+    .feet i:nth-child(3) { left: 12px; top: 1px; rotate: -12deg; animation-delay: -.12s; }
+    .feet i:nth-child(4) { left: 29px; top: 2px; rotate: 8deg; animation-delay: 0s; }
+
+    .crawler.moving .mouse { animation: mouseRun .24s infinite alternate; }
+    .crawler.moving .ears i { animation: earBounce .32s infinite ease-in-out alternate; }
+    .crawler.moving .tail { animation: tailSwing .26s infinite ease-in-out alternate; }
+    .crawler.moving .feet i { animation: footRun .18s infinite ease-in-out alternate; }
+
+    @keyframes mouseRun {
+      from { translate: -1px 0; rotate: -1deg; }
+      to { translate: 2px 1px; rotate: 2deg; }
+    }
+
+    @keyframes footRun {
+      from { translate: -3px 0; scale: 1 1; }
+      to { translate: 3px 0; scale: .72 1; }
+    }
+
+    @keyframes tailSwing {
+      from { rotate: -12deg; }
+      to { rotate: 14deg; }
+    }
+
+    @keyframes earBounce {
+      from { translate: 0 0; }
+      to { translate: 0 -2px; }
+    }
+
+    .shop {
+      height: 100%;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+    }
+
+    .shop-grid {
+      width: min(100%, 386px);
+      aspect-ratio: 1;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      padding: 8px;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 8px;
+      background: rgba(0,0,0,.2);
+      touch-action: none;
+    }
+
+    .tile {
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 6px;
+      min-width: 0;
+      font-weight: 850;
+      color: #17120c;
+      box-shadow: inset 0 -4px rgba(0,0,0,.12);
+    }
+
+    .tile.empty {
+      background: rgba(255,255,255,.07);
+      box-shadow: none;
+    }
+
+    .tile span {
+      display: block;
+      line-height: 1.18;
+      font-size: clamp(12px, 3vw, 16px);
+      overflow-wrap: anywhere;
+    }
+
+    .tile small {
+      display: block;
+      margin-top: 3px;
+      font-size: 11px;
+      opacity: .72;
+    }
+
+    .overtime {
+      height: 100%;
+      display: grid;
+      align-content: center;
+      gap: 12px;
+      padding: 22px;
+    }
+
+    .work-card {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(12,14,19,.76);
+      line-height: 1.55;
+    }
+
+    .choices {
+      display: grid;
+      gap: 9px;
+    }
+
+    .choice {
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: var(--panel-2);
+      text-align: left;
+      line-height: 1.45;
+    }
+
+    .hint-panel {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(27,31,40,.86);
+      line-height: 1.5;
+    }
+
+    .hint-title { margin-bottom: 4px; color: var(--warn); font-weight: 800; }
+    .hint-text { min-height: 42px; color: var(--muted); font-size: 14px; }
+
+    .result {
+      position: absolute;
+      inset: 0;
+      display: none;
+      place-items: center;
+      padding: 16px;
+      background: rgba(8,9,12,.78);
+      backdrop-filter: blur(5px);
+      z-index: 10;
+    }
+
+    .result.show { display: grid; }
+
+    .card {
+      width: min(100%, 360px);
+      max-height: calc(100% - 24px);
+      overflow: auto;
+      padding: 18px;
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 8px;
+      background: #1a1e27;
+      box-shadow: 0 20px 70px rgba(0,0,0,.38);
+    }
+
+    .card h2 { margin: 0 0 8px; font-size: 22px; }
+    .card p { margin: 8px 0; color: var(--muted); line-height: 1.55; }
+
+    .achievement-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .achievement-list:empty { display: none; }
+
+    .achievement-card {
+      display: grid;
+      grid-template-columns: 36px 1fr;
+      gap: 10px;
+      padding: 10px;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 8px;
+      background: rgba(255,255,255,.045);
+    }
+
+    .achievement-icon {
+      width: 36px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      background: rgba(255,209,102,.14);
+      color: var(--warn);
+      font-weight: 900;
+    }
+
+    .achievement-name {
+      color: var(--text);
+      font-weight: 850;
+      font-size: 14px;
+      line-height: 1.25;
+    }
+
+    .achievement-desc {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .again {
+      width: 100%;
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 8px;
+      background: var(--warn);
+      color: #181006;
+      font-weight: 850;
+    }
+
+    .toast {
+      position: absolute;
+      left: 50%;
+      bottom: 88px;
+      transform: translateX(-50%);
+      width: max-content;
+      max-width: calc(100% - 32px);
+      padding: 9px 11px;
+      border-radius: 8px;
+      background: rgba(0,0,0,.74);
+      color: var(--text);
+      font-size: 13px;
+      opacity: 0;
+      transition: opacity .2s ease, translate .2s ease;
+      pointer-events: none;
+      z-index: 12;
+    }
+
+    .toast.show { opacity: 1; translate: 0 -6px; }
+
+    .hidden { display: none !important; }
+
+    .menu-screen,
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      background:
+        radial-gradient(circle at 20% 18%, rgba(141,214,255,.16), transparent 24rem),
+        radial-gradient(circle at 84% 88%, rgba(255,209,102,.13), transparent 24rem),
+        rgba(10, 11, 15, .94);
+    }
+
+    .menu-card,
+    .modal-card {
+      width: min(100%, 390px);
+      padding: 20px;
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 8px;
+      background: #1a1e27;
+      box-shadow: 0 20px 70px rgba(0,0,0,.38);
+    }
+
+    .menu-card h2,
+    .modal-card h2 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      letter-spacing: 0;
+    }
+
+    .menu-card p,
+    .modal-card p {
+      margin: 8px 0 14px;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    #resultCopy {
+      white-space: pre-line;
+    }
+
+    .menu-actions {
+      display: grid;
+      gap: 9px;
+      margin-top: 14px;
+    }
+
+    .menu-btn {
+      padding: 12px;
+      border-radius: 8px;
+      background: var(--panel-2);
+      border: 1px solid rgba(255,255,255,.12);
+      font-weight: 800;
+    }
+
+    .menu-btn.primary-action {
+      background: var(--accent);
+      color: #071016;
+    }
+
+    .setting-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      border-top: 1px solid rgba(255,255,255,.08);
+    }
+
+    .switch {
+      width: 48px;
+      height: 26px;
+      border-radius: 99px;
+      background: rgba(255,255,255,.16);
+      padding: 3px;
+    }
+
+    .switch i {
+      display: block;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--text);
+      transition: translate .16s ease;
+    }
+
+    .switch.on {
+      background: rgba(123,216,143,.55);
+    }
+
+    .switch.on i {
+      translate: 22px 0;
+    }
+
+    .day-scene {
+      height: 100%;
+      display: grid;
+      align-content: center;
+      gap: 12px;
+      padding: 22px;
+    }
+
+    .scene-card {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(12,14,19,.76);
+      line-height: 1.55;
+    }
+
+    .scene-kicker {
+      color: var(--warn);
+      font-weight: 850;
+      margin-bottom: 6px;
+    }
+
+    @media (max-width: 430px) {
+      .game { padding: 12px; }
+      .stats {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+        padding: 6px;
+      }
+      .stat { min-height: 64px; padding: 8px 8px 9px; }
+      .label { font-size: 10px; }
+      .value { font-size: 19px; }
+      .stat-date .value { font-size: 17px; }
+      .hole { width: 56px; height: 56px; }
+      .tile span { font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <section class="menu-screen" id="menuScreen">
+    <div class="menu-card">
+      <h2>鼠鼠模拟器</h2>
+      <p>9 月入职广东大厂运营岗，从试用期开始，试着熬过 9-12 月的工作、通勤、房租和生活小事故。</p>
+      <div class="menu-actions">
+        <button class="menu-btn primary-action" id="newGameBtn">新游戏</button>
+        <button class="menu-btn" id="continueBtn">继续存档</button>
+        <button class="menu-btn" id="settingsBtn">设置</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="modal hidden" id="settingsModal">
+    <div class="modal-card">
+      <h2>设置</h2>
+      <div class="setting-row">
+        <span>跳过新手引导</span>
+        <button class="switch" id="skipTutorialBtn" aria-label="跳过新手引导"><i></i></button>
+      </div>
+      <div class="setting-row">
+        <span>清除本地存档</span>
+        <button class="menu-btn" id="clearSaveBtn">清除</button>
+      </div>
+      <button class="menu-btn primary-action" id="closeSettingsBtn">返回</button>
+    </div>
+  </section>
+
+  <section class="modal hidden" id="tutorialModal">
+    <div class="modal-card">
+      <h2 id="tutorialTitle">新手引导</h2>
+      <p id="tutorialText"></p>
+      <button class="menu-btn primary-action" id="tutorialNextBtn">下一步</button>
+    </div>
+  </section>
+
+  <main class="game hidden" id="game" aria-label="鼠鼠模拟器夜晚事件原型">
+    <section class="topbar">
+      <div>
+        <h1>鼠鼠模拟器</h1>
+        <div class="subtitle">广东大厂运营岗试用期</div>
+      </div>
+      <div class="top-actions">
+        <button class="primary" id="saveExitBtn">存档退出</button>
+      </div>
+    </section>
+
+    <section class="stats" aria-live="polite">
+      <div class="stat stat-date" data-icon="日"><div class="label">日期</div><div class="value" id="monthText">9月 1日 周一</div></div>
+      <div class="stat stat-work" data-icon="评"><div class="label" id="stat2Label">上级评价</div><div class="value" id="stat2Text">50</div></div>
+      <div class="stat stat-salary" data-icon="薪"><div class="label" id="stat3Label">预估工资</div><div class="value" id="stat3Text">8500</div></div>
+      <div class="stat stat-cash" data-icon="¥"><div class="label">现金</div><div class="value" id="cashText">4000</div></div>
+      <div class="stat stat-hair" data-icon="发"><div class="label">发量</div><div class="value" id="healthText">75</div></div>
+      <div class="stat stat-mood" data-icon="心"><div class="label">心态</div><div class="value" id="moodText">70</div></div>
+      <div class="stat stat-peer" data-icon="友"><div class="label">同事印象</div><div class="value" id="peerText">60</div></div>
+      <div class="stat stat-clean" data-icon="净"><div class="label">整洁</div><div class="value" id="cleanText">65</div></div>
+    </section>
+
+    <section class="stage">
+      <div class="stage-title">
+        <span id="eventTitle">9月 1日</span>
+        <span class="mode" id="modeText">工作时间</span>
+      </div>
+
+      <div class="board" id="board">
+        <div class="crawler" id="crawler" aria-hidden="true">
+          <div class="mouse">
+            <span class="tail"></span>
+            <span class="ears"><i></i><i></i></span>
+            <span class="eyes"><i></i><i></i></span>
+            <span class="cheeks"><i></i><i></i></span>
+            <span class="nose"></span>
+            <span class="whiskers"><i></i><i></i><i></i></span>
+            <span class="feet"><i></i><i></i><i></i><i></i></span>
+          </div>
+        </div>
+        <div class="result" id="result">
+          <div class="card">
+            <h2 id="resultTitle"></h2>
+            <p id="resultMeta"></p>
+            <p id="resultCopy"></p>
+            <div class="achievement-list" id="achievementList"></div>
+            <button class="again" id="againBtn">进入下个月</button>
+          </div>
+        </div>
+        <div class="toast" id="toast"></div>
+      </div>
+    </section>
+
+    <section class="hint-panel">
+      <div class="hint-title" id="hintTitle">规则</div>
+      <div class="hint-text" id="hintText"></div>
+    </section>
+  </main>
+
+  <script>
+    const DAYS_PER_MONTH = 28;
+
+    const schedule = [
+      { label: "9月", work: 0, night: { type: "night", title: "夜晚：出租屋第一晚" } },
+      { label: "10月", work: 1, night: { type: "night", title: "夜晚：活动前夜" } },
+      { label: "11月", work: 3, night: { type: "night", title: "夜晚：双十一支援后" } },
+      { label: "12月", work: 4, night: { type: "night", title: "夜晚：转正评估前" } }
+    ];
+
+    const mouseLevels = [
+      {
+        name: "城中村单间",
+        stones: 3,
+        maxTurns: 6,
+        start: "A",
+        holes: {
+          A: { name: "门缝", x: 18, y: 28 },
+          B: { name: "拖鞋边", x: 44, y: 18 },
+          C: { name: "桌脚", x: 74, y: 28 },
+          D: { name: "纸箱", x: 31, y: 53 },
+          E: { name: "床底", x: 64, y: 55 },
+          F: { name: "外卖袋", x: 40, y: 78 },
+          X: { name: "房门", x: 72, y: 86, exit: true }
+        },
+        priorities: {
+          A: ["B", "D"], B: ["C", "E", "A"], C: ["E", "B"],
+          D: ["E", "F", "A"], E: ["F", "X", "C", "D"], F: ["X", "D", "E"], X: []
+        }
+      },
+      {
+        name: "回南天出租屋",
+        stones: 4,
+        maxTurns: 7,
+        start: "A",
+        holes: {
+          A: { name: "湿门缝", x: 15, y: 18 },
+          B: { name: "衣架下", x: 49, y: 13 },
+          C: { name: "空调管", x: 81, y: 25 },
+          D: { name: "纸箱", x: 24, y: 43 },
+          E: { name: "地漏", x: 55, y: 39 },
+          F: { name: "床尾", x: 78, y: 54 },
+          G: { name: "脏衣篮", x: 18, y: 72 },
+          H: { name: "外卖袋", x: 48, y: 80 },
+          I: { name: "柜脚", x: 73, y: 76 },
+          X: { name: "阳台门", x: 90, y: 88, exit: true }
+        },
+        priorities: {
+          A: ["B", "D"], B: ["C", "H", "E", "A"], C: ["F", "B"],
+          D: ["E", "G", "A"], E: ["F", "H", "D", "B"], F: ["I", "X", "B", "E", "C"],
+          G: ["H", "D"], H: ["I", "C", "G", "E"], I: ["X", "F", "H"], X: []
+        }
+      },
+      {
+        name: "台风夜厨房",
+        stones: 5,
+        maxTurns: 8,
+        start: "A",
+        holes: {
+          A: { name: "门槛", x: 12, y: 35 },
+          B: { name: "冰箱底", x: 35, y: 16 },
+          C: { name: "水槽缝", x: 66, y: 14 },
+          D: { name: "窗帘后", x: 88, y: 34 },
+          E: { name: "米袋旁", x: 26, y: 45 },
+          F: { name: "锅架下", x: 53, y: 43 },
+          G: { name: "垃圾桶", x: 75, y: 54 },
+          H: { name: "扫把后", x: 17, y: 72 },
+          I: { name: "地漏", x: 42, y: 78 },
+          J: { name: "外卖箱", x: 66, y: 80 },
+          K: { name: "鞋柜", x: 86, y: 75 },
+          X: { name: "楼道", x: 52, y: 94, exit: true }
+        },
+        priorities: {
+          A: ["B", "E"], B: ["C", "F", "J", "A"], C: ["D", "G", "I", "B"],
+          D: ["G", "K", "C"], E: ["F", "H", "C", "A"], F: ["G", "I", "K", "E", "B"],
+          G: ["K", "J", "A", "F", "D"], H: ["I", "F", "E"], I: ["J", "X", "C", "H", "F"],
+          J: ["K", "X", "B", "I", "G"], K: ["X", "E", "J", "G"], X: []
+        }
+      }
+    ];
+
+    const foods = [
+      null,
+      { name: "临期饭团", color: "#f7d794" },
+      { name: "打折酸奶", color: "#c7ecee" },
+      { name: "关东煮", color: "#ffbe76" },
+      { name: "鸡蛋三明治", color: "#f9ca24" },
+      { name: "烧鹅饭", color: "#e17055" },
+      { name: "双拼饭", color: "#fab1a0" },
+      { name: "一周口粮", color: "#badc58" },
+      { name: "冰箱自由", color: "#7ed6df" },
+      { name: "超市传说", color: "#dff9fb" }
+    ];
+
+    const workEvents = [
+      {
+        body: "转正材料今晚要交。你盯着“个人贡献”四个字，回忆了一下自己最大的贡献：没有把优惠券配置错第二次。",
+        choices: [
+          ["认真包装活动数据", 8, -4, 0],
+          ["找导师要一版参考", 5, -2, 0],
+          ["复制模板先交上去", -3, 2, 0]
+        ]
+      },
+      {
+        body: "半年复盘 PPT 被导师打回：“不能只写做了什么，要写为什么。”你感觉 PPT 也在问你为什么。",
+        choices: [
+          ["重拉数据写结论", 9, -5, 0],
+          ["找优秀复盘拆结构", 6, -2, -20],
+          ["只改标题和总结", -4, 2, 0]
+        ]
+      },
+      {
+        body: "大促方案初版要发群。老板要增长，财务要 ROI，设计要你别明天才给需求。",
+        choices: [
+          ["先写核心卖点和资源位", 8, -4, 0],
+          ["缩小范围保执行", 4, 1, 0],
+          ["硬凑一个大而全方案", -2, -5, 0]
+        ]
+      },
+      {
+        body: "年终述职前夜。你打开空白文档，感觉这一年像 12 个浏览器标签页，同时在脑子里自动刷新。",
+        choices: [
+          ["用数据讲清楚贡献", 10, -5, 0],
+          ["突出协同和复盘能力", 6, -2, 0],
+          ["写到凌晨三点堆字数", 2, -8, 0]
+        ]
+      }
+    ];
+
+    const lifeEvents = [
+      {
+        tag: "通勤",
+        body: "早上醒来已经 8:47。窗户楼下的烧烤摊昨晚生意很好，酒瓶声哐当响了半宿。而你离 9:30 打卡还隔着一个安检口和两段地铁。",
+        choices: [
+          ["打车冲去公司", 2, -1, -45, 0, 0],
+          ["冲刺赶地铁", 2, -3, 0, 0, -2],
+          ["群里提前报备可能迟到", -2, -1, 0, 2, 0]
+        ]
+      },
+      {
+        tag: "堵车",
+        body: "下雨天打车去公司，但早高峰高架一片红。司机师傅说前面事故还要堵二十分钟，你手机里的晨会提醒开始倒计时。",
+        choices: [
+          ["开热点车上参会", 0, -2, -10, 0, 0],
+          ["提前给领导报备", -1, 0, 0, 2, 0],
+          ["改成会后补纪要", -2, 1, 0, -2, 0]
+        ]
+      },
+      {
+        tag: "电动车",
+        body: "人行道上，一辆外卖电动车从身后贴边冲过。豆浆飞出去半杯，膝盖磕到路沿，裤脚还沾了一片糖水。",
+        choices: [
+          ["去药店买药处理", -2, -1, -35, 0, -1],
+          ["忍着赶去上班", 3, -4, 0, 6, -6],
+          ["拍照留证再报备", -2, -2, 200, 2, -1]
+        ]
+      },
+      {
+        tag: "台风",
+        body: "台风红色预警挂上了，公司终于通知居家办公。出租屋窗缝开始渗水，楼下便利店泡面被扫空，工作群却比平时更热闹。",
+        choices: [
+          ["先垫毛巾再处理待办", 2, -3, 0, 0, -2],
+          ["下楼补点泡面和电池", -2, 3, -48, 0, 0],
+          ["趁风雨声补觉半小时", -2, 3, 0, 0, 1]
+        ]
+      },
+      {
+        tag: "回南天",
+        body: "回南天一来，墙面像贴了保鲜膜。被子睡了两晚开始有股潮味，衣服晾了三天也没干，今天要穿去公司的衬衫也在其中。",
+        choices: [
+          ["迟到把被套衣服全部重洗烘干", -2, -1, -45, 0, 0],
+          ["喷香水硬撑一天", -2, -3, -10, -6, 0],
+          ["买件速干上衣先救急", 0, -2, -99, 2, -2]
+        ]
+      },
+      {
+        tag: "暴雨",
+        body: "刚出地铁口，广东的雨像按了全屏播放。鞋袜、帆布袋和刚打印的活动排期一起湿透，路边共享伞还全被借光。",
+        choices: [
+          ["买伞和热饮", -1, 2, -45, 0, 1],
+          ["打车回家再换鞋", -3, 3, -80, 0, 2],
+          ["冒雨冲去公司", 1, -3, 0, 2, -3]
+        ]
+      },
+      {
+        tag: "地铁",
+        body: "早高峰地铁门开的一瞬间，车厢里的人像被压缩进一个沙丁鱼罐头。你拼尽全力挤上地铁，差点把拖鞋挤掉。",
+        choices: [
+          ["迟到多等两班", -2, 3, 0, 0, 0],
+          ["硬挤到公司", 1, -3, 0, 0, -1],
+          ["买杯咖啡回血", 2, -1, -28, 0, -2]
+        ]
+      },
+      {
+        tag: "高温",
+        body: "出门五分钟，后背已经开始申请居家办公。出租屋空调昨晚开到凌晨，电费余额和太阳同时向你发起进攻。",
+        choices: [
+          ["开空调睡好觉", 1, 3, -90, 0, 1],
+          ["省电硬扛", -2, -4, 0, 0, -2],
+          ["去公司蹭空调早到", 2, -2, 0, 2, -3]
+        ]
+      },
+      {
+        tag: "早餐",
+        body: "楼下肠粉店排队排到转角，老板娘一边淋酱油一边喊号。你不停的看着时间，但前面还有五个人没拿餐。",
+        choices: [
+          ["排队吃完再走", -2, 2, -18, 2, 2],
+          ["便利店饭团解决", 0, -2, -9, 0, -1],
+          ["空腹冲去公司", 2, -3, 0, 0, -3]
+        ]
+      },
+      {
+        tag: "房东",
+        body: "房东发来消息：楼里要查漏水，师傅可能十点进屋。你看了看椅子上的衣服山，又看了看早会时间。",
+        choices: [
+          ["早起半小时收拾", 0, -1, 0, 0, -2],
+          ["让房东直接进", 0, -1, 0, 0, 0],
+          ["拖到周末再说", 0, -1, 0, 0, -1]
+        ]
+      },
+      {
+        tag: "隔音",
+        body: "隔壁凌晨两点还在外放短视频，楼下宵夜档收摊时铁锅哐哐响。你早上刷牙时盯着镜子，感觉自己没加载完成。",
+        choices: [
+          ["买耳塞续命", 0, 3, -25, 0, -1],
+          ["靠咖啡顶住", 1, -2, -18, 0, -2],
+          ["白天偷偷补觉", -3, 3, 0, -2, 1]
+        ]
+      },
+      {
+        tag: "快递",
+        body: "你昨天买的洗衣液和纸巾到了，但驿站排队像大促会场。再不取，今晚洗衣服就只能靠半包试用装。",
+        choices: [
+          ["午休去取", 0, -2, 0, 0, -1],
+          ["下班再排队", 0, -4, 0, 0, 0],
+          ["加钱送上门", 0, 2, -15, 0, 0]
+        ]
+      },
+      {
+        tag: "租房",
+        body: "房东说年底前可能要涨租，还顺手发来一张水电分摊截图。你放大看了三遍，还是没搞懂到底你应该出哪部分。",
+        choices: [
+          ["问清楚分摊明细", 0, -3, -200, 0, 0],
+          ["先记账月底再谈", 0, 0, -300, 0, 0],
+          ["立刻看附近房源", -1, -3, -100, 0, -1]
+        ]
+      },
+      {
+        tag: "小病",
+        body: "早上嗓子发紧，地铁里又有人一直咳嗽。你摸了摸额头，感觉今天每一个会议邀请都在加重症状。",
+        choices: [
+          ["买药并戴口罩上班", 0, -2, -38, 2, -2],
+          ["申请居家半天", -3, 2, 0, 0, 0],
+          ["硬撑到晚上再说", 2, -2, 0, 0, -4]
+        ]
+      },
+      {
+        tag: "门禁",
+        body: "早上出门，城中村楼下门禁突然刷不开，物业群里没人回。你隔着铁门看见外卖员进出，比自己还熟这栋楼。",
+        choices: [
+          ["等邻居下楼一起出去", -1, -1, 0, 0, 0],
+          ["给房东打电话开门", 0, -2, 0, 0, 0],
+          ["从侧门绕一大圈", -2, -1, 0, 0, -1]
+        ]
+      },
+      {
+        tag: "早餐涨价",
+        body: "楼下肠粉从 18 块涨到 20 块，老板娘一边找零一边说鸡蛋也涨了。你摸出手机，发现这个月早餐钱已经超了。",
+        choices: [
+          ["忍痛吃掉", 0, 2, -20, 0, 2],
+          ["换成便利店饭团", 0, -1, -8, 0, -1],
+          ["自己煮鸡蛋带走", 0, -4, -3, 0, -1]
+        ]
+      }
+    ];
+
+    const dayWorkEvents = [
+          {
+                "title": "入职培训：权限还没开",
+                "body": "入职第一天，导师让你先熟悉活动后台。你点开链接，系统提示“暂无权限”。IT 让你找 HR，HR 让你找部门接口人。",
+                "choices": [
+                      [
+                            "主动拉群推进权限",
+                            2,
+                            -2,
+                            0,
+                            -2,
+                            -2
+                      ],
+                      [
+                            "先看历史活动资料",
+                            1,
+                            1,
+                            0,
+                            2,
+                            -1
+                      ],
+                      [
+                            "等导师帮你处理",
+                            -2,
+                            1,
+                            0,
+                            -2,
+                            0
+                      ]
+                ]
+          },
+          {
+                "title": "新人第一条 Push",
+                "body": "你要写一条召回 7 天未活跃用户的 App Push。老板要转化，法务说不能夸大，用户最好别烦。",
+                "choices": [
+                      [
+                            "你有一张专属优惠券待领取",
+                            2,
+                            0,
+                            0,
+                            2,
+                            -2
+                      ],
+                      [
+                            "今晚 24 点前，不领就过期",
+                            1,
+                            -2,
+                            0,
+                            -2,
+                            -1
+                      ],
+                      [
+                            "好久不见，回来看看新活动",
+                            0,
+                            0,
+                            0,
+                            0,
+                            -1
+                      ]
+                ]
+          },
+          {
+                "title": "小活动拉新",
+                "body": "预算 3000，目标拉新 500 人。你打开空白文档，发现最难的是让 3000 块看起来像 30000。",
+                "choices": [
+                      [
+                            "做低成本裂变玩法",
+                            1,
+                            -2,
+                            0,
+                            -2,
+                            -1
+                      ],
+                      [
+                            "申请追加预算",
+                            -1,
+                            -1,
+                            0,
+                            2,
+                            0
+                      ],
+                      [
+                            "复用前人模板",
+                            0,
+                            0,
+                            0,
+                            2,
+                            0
+                      ]
+                ]
+          },
+          {
+                "title": "双十一支援",
+                "body": "大促群消息像瀑布，设计问需求冻结没，产品问页面上没上，老板问数据为什么没爆。",
+                "choices": [
+                      [
+                            "按优先级拆待办",
+                            1,
+                            -3,
+                            0,
+                            2,
+                            -1
+                      ],
+                      [
+                            "先回老板消息",
+                            1,
+                            -2,
+                            0,
+                            -4,
+                            -1
+                      ],
+                      [
+                            "什么都接下来",
+                            3,
+                            -4,
+                            0,
+                            4,
+                            -2
+                      ]
+                ]
+          },
+          {
+                "title": "转正答辩",
+                "body": "HR 发来转正通知。领导说“你最近表现还可以”，这个“还可以”听起来比基金净值还不稳。",
+                "choices": [
+                      [
+                            "认真准备述职",
+                            3,
+                            -3,
+                            0,
+                            -2,
+                            -2
+                      ],
+                      [
+                            "找同事打听标准",
+                            1,
+                            -1,
+                            0,
+                            4,
+                            -1
+                      ],
+                      [
+                            "相信缘分",
+                            -4,
+                            3,
+                            0,
+                            0,
+                            0
+                      ]
+                ]
+          },
+          {
+                "title": "年末复盘",
+                "body": "你在日报里写“活动效果符合预期”。老板回复：预期是多少？和上周比为什么下降？",
+                "choices": [
+                      [
+                            "补数据分析",
+                            3,
+                            -4,
+                            0,
+                            -2,
+                            -2
+                      ],
+                      [
+                            "找数据同学对口径",
+                            1,
+                            -2,
+                            0,
+                            0,
+                            -1
+                      ],
+                      [
+                            "改得更模糊",
+                            -2,
+                            0,
+                            0,
+                            -2,
+                            0
+                      ]
+                ]
+          },
+          {
+                "title": "国庆前活动预案",
+                "body": "国庆假期前，老板要求把活动预案、客服话术和异常兜底都写清楚。你发现最难的不是放假，是让别人放心你能放假。",
+                "choices": [
+                      [
+                            "列出异常场景和负责人",
+                            3,
+                            -2,
+                            0,
+                            4,
+                            -2
+                      ],
+                      [
+                            "只补核心链路预案",
+                            2,
+                            -1,
+                            0,
+                            0,
+                            -2
+                      ],
+                      [
+                            "把去年模板改日期",
+                            -3,
+                            1,
+                            0,
+                            -4,
+                            0
+                      ]
+                ]
+          },
+          {
+                "title": "十月 KPI 拆解",
+                "body": "十月目标下来了：拉新、留存、转化都要涨。你看着表格，感觉每个百分号都在盯你。",
+                "choices": [
+                      [
+                            "拆成三条策略",
+                            3,
+                            -2,
+                            0,
+                            0,
+                            -2
+                      ],
+                      [
+                            "先争取资源",
+                            1,
+                            -3,
+                            0,
+                            2,
+                            -1
+                      ],
+                      [
+                            "只接最稳的指标",
+                            0,
+                            1,
+                            0,
+                            -2,
+                            -1
+                      ]
+                ]
+          },
+          {
+                "title": "竞品补贴冲击",
+                "body": "竞品同类活动直接满减翻倍。你这边刚上线的小活动瞬间显得像一张试用装优惠券。",
+                "choices": [
+                      [
+                            "调整活动卖点",
+                            3,
+                            -2,
+                            0,
+                            0,
+                            -5
+                      ],
+                      [
+                            "申请临时预算",
+                            2,
+                            -3,
+                            0,
+                            2,
+                            -2
+                      ],
+                      [
+                            "维持观察数据",
+                            -2,
+                            0,
+                            0,
+                            -2,
+                            0
+                      ]
+                ]
+          },
+          {
+                "title": "双十一资源位排期",
+                "body": "首页资源位要排期，三个业务都说自己非常关键。会议室里每个人都在争一个屏幕入口。",
+                "choices": [
+                      [
+                            "准备数据争资源",
+                            3,
+                            -3,
+                            0,
+                            -2,
+                            -2
+                      ],
+                      [
+                            "交换资源位",
+                            1,
+                            -1,
+                            0,
+                            6,
+                            -1
+                      ],
+                      [
+                            "接受低优先级",
+                            -2,
+                            2,
+                            0,
+                            2,
+                            0
+                      ]
+                ]
+          },
+          {
+                "title": "双十一券包事故",
+                "body": "活动上线十分钟，用户群里有人说券领不了。你打开后台，发现自己写适用范围少勾了一个品类。",
+                "choices": [
+                      [
+                            "立刻修正并同步",
+                            -1,
+                            -5,
+                            0,
+                            0,
+                            0
+                      ],
+                      [
+                            "找同事一起排查",
+                            -3,
+                            -2,
+                            0,
+                            2,
+                            0
+                      ],
+                      [
+                            "先私下改掉",
+                            -5,
+                            -1,
+                            0,
+                            -4,
+                            0
+                      ]
+                ]
+          },
+          {
+                "title": "双十二预热页验收",
+                "body": "双十二预热页终于提测。测试同学说按钮埋点没上，设计说氛围感不够，老板说转化路径太长。",
+                "choices": [
+                      [
+                            "按问题优先级排修复",
+                            3,
+                            -3,
+                            0,
+                            2,
+                            -5
+                      ],
+                      [
+                            "先保埋点和主链路",
+                            0,
+                            -1,
+                            0,
+                            0,
+                            -1
+                      ],
+                      [
+                            "全部拉群同时推进",
+                            2,
+                            -4,
+                            0,
+                            -4,
+                            -2
+                      ]
+                ]
+          },
+          {
+                "title": "新人周报被打回",
+                "body": "你把本周做过的事写成流水账。导师批注：“运营不是记录员，要写判断和下一步。”",
+                "choices": [
+                      [
+                            "补充数据和判断",
+                            3,
+                            -2,
+                            0,
+                            0,
+                            -5
+                      ],
+                      [
+                            "找导师问优秀样例",
+                            2,
+                            -1,
+                            0,
+                            4,
+                            -2
+                      ],
+                      [
+                            "只把格式改漂亮",
+                            -2,
+                            1,
+                            0,
+                            -2,
+                            0
+                      ]
+                ]
+          },
+          {
+                "title": "活动页面文案校对",
+                "body": "设计稿里有一句“全网最低价”，法务在群里打了一个问号。你突然理解标点符号也有杀伤力。",
+                "choices": [
+                      [
+                            "改成合规卖点",
+                            1,
+                            -1,
+                            0,
+                            0,
+                            -1
+                      ],
+                      [
+                            "拉法务确认边界",
+                            2,
+                            -2,
+                            0,
+                            2,
+                            -2
+                      ],
+                      [
+                            "先上线再观察",
+                            -3,
+                            1,
+                            0,
+                            -4,
+                            0
+                      ]
+                ]
+          },
+          {
+                "title": "用户评论翻车",
+                "body": "活动评论区有人说规则看不懂，还有人截图吐槽客服回复像模板。老板让你半小时内给处理方案。",
+                "choices": [
+                      [
+                            "重写规则说明和客服话术",
+                            2,
+                            -3,
+                            0,
+                            2,
+                            -2
+                      ],
+                      [
+                            "先置顶 FAQ",
+                            0,
+                            -1,
+                            0,
+                            0,
+                            -1
+                      ],
+                      [
+                            "删掉刺眼评论",
+                            -5,
+                            2,
+                            0,
+                            -4,
+                            0
+                      ]
+                ]
+          },
+          {
+                "title": "数据口径对不上",
+                "body": "日报里转化率比数据同学看板高了 0.8 个点。你打开三个后台，发现每个后台都像在讲不同语言。",
+                "choices": [
+                      [
+                            "逐项核对口径",
+                            3,
+                            -3,
+                            0,
+                            0,
+                            -5
+                      ],
+                      [
+                            "找数据同学一起看",
+                            2,
+                            -1,
+                            0,
+                            2,
+                            -2
+                      ],
+                      [
+                            "先按好看的数汇报",
+                            -1,
+                            1,
+                            0,
+                            -2,
+                            0
+                      ]
+                ]
+          },
+          {
+                "title": "老板临时要竞品截图",
+                "body": "下午 6 点，老板突然要一份竞品活动截图合集，说晚上会上要用。你正准备下班去挤地铁。",
+                "choices": [
+                      [
+                            "快速整理重点截图",
+                            3,
+                            -4,
+                            0,
+                            0,
+                            -2
+                      ],
+                      [
+                            "请同事分头收集",
+                            0,
+                            -1,
+                            0,
+                            -4,
+                            -1
+                      ],
+                      [
+                            "只截首页糊弄过去",
+                            -1,
+                            0,
+                            0,
+                            -2,
+                            0
+                      ]
+                ]
+          },
+          {
+                "title": "素材审核卡住",
+                "body": "广告素材卡在审核环节，投放同学说再不上就错过流量高峰。你看着“疑似夸大宣传”几个字开始头皮发紧。",
+                "choices": [
+                      [
+                            "改文案重新送审",
+                            3,
+                            -2,
+                            0,
+                            2,
+                            -2
+                      ],
+                      [
+                            "同步风险和备选素材",
+                            3,
+                            -3,
+                            0,
+                            4,
+                            -5
+                      ],
+                      [
+                            "催审核同学通融",
+                            -2,
+                            2,
+                            0,
+                            -4,
+                            0
+                      ]
+                ]
+          },
+          {
+                "title": "客服反馈集中爆发",
+                "body": "客服群里刷屏：用户领了券不会用，商家说活动规则和后台配置不一致。你发现文档里少了一行关键限制。",
+                "choices": [
+                      [
+                            "补文档并同步客服",
+                            3,
+                            -3,
+                            0,
+                            -2,
+                            -5
+                      ],
+                      [
+                            "先修后台配置",
+                            2,
+                            -2,
+                            0,
+                            -2,
+                            -2
+                      ],
+                      [
+                            "让客服先安抚用户",
+                            0,
+                            -1,
+                            0,
+                            0,
+                            -1
+                      ]
+                ]
+          },
+          {
+                "title": "活动复盘会",
+                "body": "复盘会上，老板问为什么曝光够了、点击也不差，但转化没起来。会议室的空调突然有点冷。",
+                "choices": [
+                      [
+                            "拆漏斗找掉点",
+                            2,
+                            -4,
+                            0,
+                            4,
+                            -2
+                      ],
+                      [
+                            "承认假设不足并补实验",
+                            -1,
+                            -4,
+                            0,
+                            2,
+                            0
+                      ],
+                      [
+                            "强调外部环境不好",
+                            -2,
+                            -1,
+                            0,
+                            -4,
+                            0
+                      ]
+                ]
+          },
+          {
+                "title": "跨部门需求排队",
+                "body": "产品、设计、投放、客服都在等你确认一句活动规则。你第一次感觉自己像一个人形接口文档。",
+                "choices": [
+                      [
+                            "整理成一页需求说明",
+                            3,
+                            -3,
+                            0,
+                            4,
+                            -5
+                      ],
+                      [
+                            "逐个私聊确认",
+                            2,
+                            -4,
+                            0,
+                            2,
+                            -2
+                      ],
+                      [
+                            "先回最急的人",
+                            0,
+                            -1,
+                            0,
+                            -4,
+                            -1
+                      ]
+                ]
+          },
+          {
+                "title": "双十一值班表",
+                "body": "双十一值班表要排出来。你看了一眼名单，几个有娃的同事还没说话，凌晨两点的坑位也没人认领。",
+                "choices": [
+                      [
+                            "按上线节点排班",
+                            2,
+                            -2,
+                            0,
+                            -4,
+                            -2
+                      ],
+                      [
+                            "自己顶住凌晨时段",
+                            3,
+                            -4,
+                            0,
+                            4,
+                            -5
+                      ],
+                      [
+                            "把难排时段留到最后",
+                            -1,
+                            0,
+                            0,
+                            -4,
+                            0
+                      ]
+                ]
+          },
+          {
+                "title": "用户分层策略",
+                "body": "导师让你给新客、30 天未购和高频下单用户分别写触达策略。你打开后台，发现可用标签只有“最近浏览”和“近 7 天加购”。",
+                "choices": [
+                      [
+                            "先找数据同学确认标签口径",
+                            3,
+                            -2,
+                            0,
+                            4,
+                            -5
+                      ],
+                      [
+                            "用现有标签拆三版人群",
+                            3,
+                            -2,
+                            0,
+                            0,
+                            -2
+                      ],
+                      [
+                            "统一发一版文案",
+                            -3,
+                            1,
+                            0,
+                            -2,
+                            0
+                      ]
+                ]
+          },
+          {
+                "title": "预算被砍",
+                "body": "财务通知活动预算砍掉三成，但目标不变。你盯着 Excel，开始怀疑数字也会讲冷笑话。",
+                "choices": [
+                      [
+                            "缩小活动范围保转化",
+                            2,
+                            -2,
+                            0,
+                            0,
+                            -2
+                      ],
+                      [
+                            "重新谈目标口径",
+                            3,
+                            -4,
+                            0,
+                            2,
+                            -5
+                      ],
+                      [
+                            "硬上原方案",
+                            -2,
+                            0,
+                            0,
+                            -4,
+                            0
+                      ]
+                ]
+          },
+          {
+                "title": "双十二库存告急",
+                "body": "双十二活动还没过半，爆款库存突然告急。商家希望继续引流，客服担心用户下单后发不出货。",
+                "choices": [
+                      [
+                            "调整推荐位和提示",
+                            1,
+                            -2,
+                            0,
+                            2,
+                            -1
+                      ],
+                      [
+                            "临时换备选商品",
+                            1,
+                            -3,
+                            0,
+                            -2,
+                            -1
+                      ],
+                      [
+                            "继续冲量先不提示",
+                            0,
+                            1,
+                            0,
+                            0,
+                            0
+                      ]
+                ]
+          },
+          {
+                "title": "转正材料初稿",
+                "body": "你开始整理转正材料。看着四个月的日报和复盘，你发现自己写过最多的词是“同步”。",
+                "choices": [
+                      [
+                            "用项目结果组织材料",
+                            3,
+                            -3,
+                            0,
+                            -2,
+                            -5
+                      ],
+                      [
+                            "请mentor帮忙看结构",
+                            2,
+                            -2,
+                            0,
+                            4,
+                            -2
+                      ],
+                      [
+                            "把日报复制成附件",
+                            0,
+                            1,
+                            0,
+                            0,
+                            -1
+                      ]
+                ]
+          },
+          {
+                "title": "年底预算复盘",
+                "body": "部门要交年底预算复盘。老板让你说明哪些钱花出了效果，哪些钱只是让表格看起来很热闹。",
+                "choices": [
+                      [
+                            "按渠道算 ROI",
+                            5,
+                            -5,
+                            0,
+                            -2,
+                            -7
+                      ],
+                      [
+                            "找财务核对支出",
+                            3,
+                            -2,
+                            0,
+                            4,
+                            -5
+                      ],
+                      [
+                            "只写活动都已完成",
+                            -4,
+                            1,
+                            0,
+                            -4,
+                            0
+                      ]
+                ]
+          },
+          {
+                "title": "转正前需求插队",
+                "body": "转正材料刚写到一半，老板把一个临时活动丢过来：今晚要给到页面文案和资源位排期。导师提醒你，答辩材料明天也要交。",
+                "choices": [
+                      [
+                            "先定活动骨架再补答辩",
+                            3,
+                            -4,
+                            0,
+                            0,
+                            -5
+                      ],
+                      [
+                            "找导师确认优先级",
+                            3,
+                            -2,
+                            0,
+                            4,
+                            -2
+                      ],
+                      [
+                            "把答辩材料先放一边",
+                            0,
+                            -1,
+                            0,
+                            -2,
+                            -1
+                      ]
+                ]
+          }
+    ];
+
+    const teaEvents = [
+          {
+                "tag": "小红书",
+                "body": "午后茶水间，你刷到一条小红书：“大厂运营新人训像把人放进 Excel 里腌制。”配图里的工牌挂绳越看越眼熟。",
+                "choices": [
+                      [
+                            "默默划走当没看见",
+                            0,
+                            1,
+                            0,
+                            0,
+                            0
+                      ],
+                      [
+                            "匿名点个赞",
+                            0,
+                            2,
+                            0,
+                            -4,
+                            0
+                      ],
+                      [
+                            "提醒同事别发太明显",
+                            0,
+                            -1,
+                            0,
+                            -2,
+                            0
+                      ]
+                ]
+          },
+          {
+                "tag": "办公室恋情",
+                "body": "你去接水时，撞见两个同事在茶水间角落低声说“别让组里知道”。你拿着杯子，突然觉得饮水机声音很大。",
+                "choices": [
+                      [
+                            "假装只关心热水",
+                            0,
+                            1,
+                            0,
+                            2,
+                            0
+                      ],
+                      [
+                            "转身就走",
+                            0,
+                            0,
+                            0,
+                            0,
+                            0
+                      ],
+                      [
+                            "回工位和好朋友八卦",
+                            0,
+                            2,
+                            0,
+                            -4,
+                            0
+                      ]
+                ]
+          },
+          {
+                "tag": "奶茶拼单",
+                "body": "下午三点，群里有人发奶茶拼单。你本来想省钱，但“第二杯半价”像一个小型运营活动。",
+                "choices": [
+                      [
+                            "参加拼单融入一下",
+                            0,
+                            2,
+                            -18,
+                            6,
+                            0
+                      ],
+                      [
+                            "拒绝并继续工作",
+                            1,
+                            -2,
+                            0,
+                            -4,
+                            0
+                      ],
+                      [
+                            "想了想薄薄的钱包，算了",
+                            0,
+                            -1,
+                            0,
+                            0,
+                            0
+                      ]
+                ]
+          },
+          {
+                "tag": "前辈吐槽",
+                "body": "茶水间里，前辈说“这个需求我去年就做过一遍”。你端着咖啡，意识到运营工作的轮回可能比基金定投还稳定。",
+                "choices": [
+                      [
+                            "请教历史坑位",
+                            2,
+                            0,
+                            0,
+                            4,
+                            0
+                      ],
+                      [
+                            "附和两句赶紧撤",
+                            0,
+                            1,
+                            0,
+                            2,
+                            0
+                      ],
+                      [
+                            "说这次肯定不一样",
+                            0,
+                            -2,
+                            0,
+                            -4,
+                            -2
+                      ]
+                ]
+          },
+          {
+                "tag": "背锅风声",
+                "body": "你听见隔壁组在说某个活动数据异常，最后可能要找执行同学背锅。你突然对自己的日报措辞有了敬畏。",
+                "choices": [
+                      [
+                            "回去补证据链",
+                            2,
+                            -2,
+                            0,
+                            0,
+                            0
+                      ],
+                      [
+                            "提醒相关同事留痕",
+                            0,
+                            -1,
+                            0,
+                            6,
+                            0
+                      ],
+                      [
+                            "当没听到",
+                            0,
+                            0,
+                            0,
+                            0,
+                            0
+                      ]
+                ]
+          },
+          {
+                "tag": "零食柜",
+                "body": "零食柜补货了。你拿起最后一包小饼干时，旁边同事刚好也伸出手。空气安静了半秒。",
+                "choices": [
+                      [
+                            "让给同事",
+                            0,
+                            0,
+                            0,
+                            4,
+                            0
+                      ],
+                      [
+                            "说一起分",
+                            0,
+                            1,
+                            0,
+                            2,
+                            0
+                      ],
+                      [
+                            "快速拿走",
+                            0,
+                            2,
+                            0,
+                            -2,
+                            0
+                      ]
+                ]
+          },
+          {
+                "tag": "摸鱼窗口",
+                "body": "你在茶水间刷手机，看到竞品把新人券入口放在首页腰部，按钮文案和你们上午刚改的很像。",
+                "choices": [
+                      [
+                            "截两张图存下来",
+                            1,
+                            0,
+                            0,
+                            2,
+                            0
+                      ],
+                      [
+                            "继续刷十分钟",
+                            -2,
+                            3,
+                            0,
+                            -2,
+                            0
+                      ],
+                      [
+                            "发给mentor问一句",
+                            2,
+                            -1,
+                            0,
+                            4,
+                            0
+                      ]
+                ]
+          },
+          {
+                "tag": "离职传闻",
+                "body": "茶水间有人小声说隔壁组同事要离职，坑位可能会转到你们组。你手里的纸杯突然变沉。",
+                "choices": [
+                      [
+                            "提前梳理工作边界",
+                            1,
+                            -1,
+                            0,
+                            0,
+                            0
+                      ],
+                      [
+                            "和同事交换信息",
+                            0,
+                            0,
+                            0,
+                            4,
+                            0
+                      ],
+                      [
+                            "装作没听见",
+                            0,
+                            1,
+                            0,
+                            -2,
+                            0
+                      ]
+                ]
+          },
+          {
+                "tag": "领导路过",
+                "body": "你和同事刚聊到外卖哪家便宜，领导端着杯子从后面路过，还问了一句：“聊什么这么开心？”",
+                "choices": [
+                      [
+                            "顺势说在聊用户价格敏感",
+                            1,
+                            -1,
+                            0,
+                            2,
+                            0
+                      ],
+                      [
+                            "尴尬笑笑回工位",
+                            0,
+                            -1,
+                            0,
+                            0,
+                            0
+                      ],
+                      [
+                            "继续讲外卖券策略",
+                            0,
+                            1,
+                            0,
+                            -2,
+                            0
+                      ]
+                ]
+          },
+          {
+                "tag": "同事求助",
+                "body": "同事在茶水间问你活动后台怎么配券。你刚好会，但手头还有一份日报没写。",
+                "choices": [
+                      [
+                            "帮他演示一遍",
+                            0,
+                            -2,
+                            0,
+                            4,
+                            0
+                      ],
+                      [
+                            "发文档让他自己看",
+                            0,
+                            0,
+                            0,
+                            -2,
+                            0
+                      ],
+                      [
+                            "说晚点再看",
+                            0,
+                            1,
+                            0,
+                            0,
+                            0
+                      ]
+                ]
+          },
+          {
+                "tag": "群聊截图",
+                "body": "你刷到同事朋友圈发了一张工作群截图，虽然打码了，但你的头像颜色非常显眼。",
+                "choices": [
+                      [
+                            "私下提醒风险",
+                            0,
+                            -1,
+                            0,
+                            2,
+                            0
+                      ],
+                      [
+                            "截图留证据",
+                            0,
+                            -1,
+                            0,
+                            -2,
+                            0
+                      ],
+                      [
+                            "假装没看见",
+                            0,
+                            1,
+                            0,
+                            0,
+                            0
+                      ]
+                ]
+          },
+          {
+                "tag": "生日蛋糕",
+                "body": "部门有人过生日，茶水间分蛋糕。你本来只想拿一小块，结果被拉去拍合照。",
+                "choices": [
+                      [
+                            "配合拍照寒暄",
+                            0,
+                            -1,
+                            0,
+                            2,
+                            0
+                      ],
+                      [
+                            "拿完蛋糕就撤",
+                            0,
+                            3,
+                            0,
+                            -2,
+                            0
+                      ],
+                      [
+                            "主动帮忙切蛋糕",
+                            0,
+                            1,
+                            0,
+                            4,
+                            0
+                      ]
+                ]
+          },
+          {
+                "tag": "绩效风声",
+                "body": "茶水间里有人小声说今年绩效会收紧，老板最近开始看每个人的项目贡献。你手里的咖啡突然不香了。",
+                "choices": [
+                      [
+                            "回去补项目记录",
+                            2,
+                            -1,
+                            0,
+                            0,
+                            0
+                      ],
+                      [
+                            "问前辈评估重点",
+                            0,
+                            -1,
+                            0,
+                            4,
+                            0
+                      ],
+                      [
+                            "继续假装没听到",
+                            0,
+                            1,
+                            0,
+                            -2,
+                            0
+                      ]
+                ]
+          },
+          {
+                "tag": "工位零食",
+                "body": "隔壁组在分试吃零食，顺手问你们活动怎么做用户调研。你本来只是路过，突然被拉进了讨论。",
+                "choices": [
+                      [
+                            "认真聊样本和问卷",
+                            1,
+                            -1,
+                            0,
+                            4,
+                            0
+                      ],
+                      [
+                            "拿零食后快速撤离",
+                            0,
+                            2,
+                            0,
+                            2,
+                            0
+                      ],
+                      [
+                            "约个正式会议再说",
+                            0,
+                            0,
+                            0,
+                            -2,
+                            0
+                      ]
+                ]
+          }
+    ];
+
+    const weekendEvents = [
+          {
+                "tag": "海边",
+                "body": "周六一早，朋友说可以开车去海边钓鱼。你知道来回路上很折腾，但海风听起来比工作群好太多。",
+                "choices": [
+                      [
+                            "和朋友开车去海边钓鱼",
+                            0,
+                            6,
+                            -180,
+                            4,
+                            0
+                      ],
+                      [
+                            "去附近商场逛一圈",
+                            0,
+                            3,
+                            -80,
+                            0,
+                            0
+                      ],
+                      [
+                            "在家补觉到晚上",
+                            0,
+                            2,
+                            0,
+                            -2,
+                            0
+                      ]
+                ]
+          },
+          {
+                "tag": "鸡煲",
+                "body": "朋友约你去远清吃鸡煲，说那家排队久但锅气很足。你看了眼余额，又看了眼本周掉的发量。",
+                "choices": [
+                      [
+                            "开车去远清排队吃鸡煲",
+                            0,
+                            6,
+                            -120,
+                            4,
+                            0
+                      ],
+                      [
+                            "改吃楼下快餐",
+                            0,
+                            1,
+                            -25,
+                            0,
+                            -1
+                      ],
+                      [
+                            "说下次再约，自己煮面",
+                            0,
+                            0,
+                            -8,
+                            -2,
+                            0
+                      ]
+                ]
+          },
+          {
+                "tag": "商场",
+                "body": "商场里新上了你喜欢的手办，橱窗灯打得很认真。你知道买完会开心，也知道月底房租不会因此消失。",
+                "choices": [
+                      [
+                            "买一个小手办",
+                            0,
+                            7,
+                            -260,
+                            0,
+                            0
+                      ],
+                      [
+                            "看完就走 买个小蛋糕补偿自己",
+                            0,
+                            3,
+                            -35,
+                            0,
+                            0
+                      ],
+                      [
+                            "直接回家省钱",
+                            0,
+                            1,
+                            0,
+                            0,
+                            0
+                      ]
+                ]
+          },
+          {
+                "tag": "出租屋",
+                "body": "周末没有安排，出租屋窗帘透进一点阳光。床、洗衣机、外卖 App 和未读消息都在争夺你。",
+                "choices": [
+                      [
+                            "睡到自然醒再洗衣服",
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            4
+                      ],
+                      [
+                            "补一下午工作材料",
+                            3,
+                            -3,
+                            0,
+                            4,
+                            -2
+                      ],
+                      [
+                            "点外卖看综艺",
+                            0,
+                            2,
+                            -65,
+                            0,
+                            0
+                      ]
+                ]
+          },
+          {
+                "tag": "朋友局",
+                "body": "大学同学临时来广州，约你晚上吃饭。你们很久没见，但你也很久没认真算过账。",
+                "choices": [
+                      [
+                            "去吃顿好的聊近况",
+                            0,
+                            6,
+                            -180,
+                            4,
+                            0
+                      ],
+                      [
+                            "约奶茶坐一小时",
+                            0,
+                            2,
+                            -18,
+                            2,
+                            0
+                      ],
+                      [
+                            "说最近太累婉拒",
+                            0,
+                            -1,
+                            0,
+                            -2,
+                            0
+                      ]
+                ]
+          },
+          {
+                "tag": "理发",
+                "body": "你照镜子发现刘海塌得像绩效曲线。楼下理发店正在做活动，洗剪吹不用排队。",
+                "choices": [
+                      [
+                            "去理发顺便洗头按摩",
+                            0,
+                            3,
+                            -98,
+                            2,
+                            0
+                      ],
+                      [
+                            "自己剪刘海救急",
+                            0,
+                            -1,
+                            0,
+                            0,
+                            0
+                      ],
+                      [
+                            "戴帽子先混过去",
+                            0,
+                            0,
+                            0,
+                            -2,
+                            0
+                      ]
+                ]
+          },
+          {
+                "tag": "图书馆",
+                "body": "周末你去了区图书馆，想学一点数据分析。旁边小孩背古诗的声音，比公司晨会还稳定。",
+                "choices": [
+                      [
+                            "学两小时数据看板",
+                            3,
+                            -2,
+                            0,
+                            0,
+                            0
+                      ],
+                      [
+                            "看半小时就犯困",
+                            0,
+                            1,
+                            0,
+                            0,
+                            0
+                      ],
+                      [
+                            "买杯咖啡继续学",
+                            2,
+                            -1,
+                            -28,
+                            0,
+                            -1
+                      ]
+                ]
+          },
+          {
+                "tag": "城中村夜市",
+                "body": "周末晚上，楼下夜市摆满炒粉、柠檬茶和手机壳。你想出去透气，也知道钱包已经很薄。",
+                "choices": [
+                      [
+                            "吃炒粉再散步",
+                            0,
+                            2,
+                            -48,
+                            0,
+                            0
+                      ],
+                      [
+                            "只买一杯柠檬茶",
+                            0,
+                            1,
+                            -22,
+                            0,
+                            0
+                      ],
+                      [
+                            "在家煮面省钱",
+                            0,
+                            0,
+                            -5,
+                            0,
+                            0
+                      ]
+                ]
+          }
+    ];
+
+    const nightEvents = [
+          {
+                "tag": "出租屋",
+                "body": "回到出租屋时，洗衣篮已经有点危险，桌上还有昨晚的外卖袋。风扇吹过来时，房间里有一种“再拖一天就完了”的味道。",
+                "choices": [
+                      [
+                            "洗衣服顺手清桌子",
+                            0,
+                            1,
+                            -10,
+                            0,
+                            3
+                      ],
+                      [
+                            "先把明天日报补完",
+                            2,
+                            -3,
+                            0,
+                            -2,
+                            -3
+                      ],
+                      [
+                            "下楼吃糖水透口气",
+                            0,
+                            3,
+                            -35,
+                            2,
+                            -1
+                      ]
+                ]
+          },
+          {
+                "tag": "城市",
+                "body": "城中村巷口新开了一家鸡煲店，门口排队排到水果摊旁边。你手机里还有一个未完成的活动复盘。",
+                "choices": [
+                      [
+                            "回家整理房间",
+                            0,
+                            0,
+                            0,
+                            0,
+                            2
+                      ],
+                      [
+                            "写完复盘再说",
+                            3,
+                            -4,
+                            0,
+                            -2,
+                            -4
+                      ],
+                      [
+                            "排队一小时吃鸡煲",
+                            0,
+                            3,
+                            -88,
+                            4,
+                            -2
+                      ]
+                ]
+          },
+          {
+                "tag": "天气",
+                "body": "外面又开始下雨，出租屋窗边有点潮，拖鞋踩地会轻轻粘一下。地板角落已经有一圈灰水印，再拖下去明天肯定有霉味。",
+                "choices": [
+                      [
+                            "拖地除湿",
+                            0,
+                            0,
+                            0,
+                            0,
+                            3
+                      ],
+                      [
+                            "边听雨边改方案",
+                            2,
+                            -2,
+                            0,
+                            -2,
+                            -2
+                      ],
+                      [
+                            "打车去商场吹空调",
+                            0,
+                            3,
+                            -90,
+                            2,
+                            0
+                      ]
+                ]
+          },
+          {
+                "tag": "社交",
+                "body": "同事在群里问今晚有没有人去桌游，地点在公司附近的商场楼上。你知道去的话能混熟一点，不去的话能多睡一个小时。",
+                "choices": [
+                      [
+                            "拒绝后收拾屋子",
+                            0,
+                            0,
+                            0,
+                            -2,
+                            2
+                      ],
+                      [
+                            "把群消息设免打扰",
+                            2,
+                            -2,
+                            0,
+                            -4,
+                            -3
+                      ],
+                      [
+                            "去桌游局露个脸",
+                            0,
+                            3,
+                            -80,
+                            4,
+                            -2
+                      ]
+                ]
+          },
+          {
+                "tag": "发量",
+                "body": "今天肩颈有点僵，洗头时又多掉了几根。你打开手机想放松，结果先看见了明早 9 点的会和久坐提醒。",
+                "choices": [
+                      [
+                            "洗澡拉伸早点睡",
+                            0,
+                            1,
+                            0,
+                            0,
+                            4
+                      ],
+                      [
+                            "提前准备会议材料",
+                            3,
+                            -3,
+                            0,
+                            -2,
+                            -5
+                      ],
+                      [
+                            "去江边散步",
+                            0,
+                            3,
+                            -20,
+                            2,
+                            2
+                      ]
+                ]
+          },
+          {
+                "tag": "消费",
+                "body": "电商 App 推送临期零食和生活用品满减，你觉得很划算，但购物车里洗衣液、抽纸和速食越堆越高，像一个月度预算黑洞。",
+                "choices": [
+                      [
+                            "先盘点缺什么",
+                            0,
+                            0,
+                            0,
+                            0,
+                            0
+                      ],
+                      [
+                            "关掉 App 写方案",
+                            2,
+                            -2,
+                            0,
+                            -2,
+                            -2
+                      ],
+                      [
+                            "去线下超市只买刚需",
+                            0,
+                            1,
+                            -45,
+                            0,
+                            0
+                      ]
+                ]
+          },
+          {
+                "tag": "远通勤",
+                "body": "到家已经快十点，地铁换乘把你整个人摇成了低电量模式。楼下便利店的关东煮还亮着灯，房间里也还有没收的衣服。",
+                "commute": "far",
+                "choices": [
+                      [
+                            "只处理最脏的区域",
+                            0,
+                            0,
+                            0,
+                            0,
+                            1
+                      ],
+                      [
+                            "硬撑一小时",
+                            2,
+                            -4,
+                            0,
+                            -2,
+                            -6
+                      ],
+                      [
+                            "楼下便利店坐十分钟",
+                            0,
+                            2,
+                            -25,
+                            0,
+                            0
+                      ]
+                ]
+          },
+          {
+                "tag": "楼下施工",
+                "body": "楼下铺面半夜还在装灯箱，电钻声隔着窗户钻进脑袋。你看着还没洗的碗，开始理解出租屋没有真正的安静。",
+                "choices": [
+                      [
+                            "戴耳机洗碗拖地",
+                            0,
+                            0,
+                            0,
+                            0,
+                            2
+                      ],
+                      [
+                            "把噪音当白噪声",
+                            0,
+                            -2,
+                            0,
+                            0,
+                            -2,
+                            0
+                      ],
+                      [
+                            "去便利店躲半小时",
+                            0,
+                            1,
+                            -22,
+                            0,
+                            0
+                      ]
+                ]
+          },
+          {
+                "tag": "朋友语音",
+                "body": "老同学发来语音，说最近工作也很烦。你想聊聊，又担心一聊就过零点。",
+                "choices": [
+                      [
+                            "边收衣服边听他说",
+                            0,
+                            1,
+                            0,
+                            0,
+                            1
+                      ],
+                      [
+                            "先把材料赶完",
+                            2,
+                            -3,
+                            0,
+                            0,
+                            -4
+                      ],
+                      [
+                            "下楼边走边聊",
+                            0,
+                            3,
+                            -10,
+                            0,
+                            0
+                      ]
+                ]
+          }
+    ];
+
+    const monthlyFinanceEvents = [
+      {
+        tag: "小学同学结婚",
+        body: "小学同学突然发来婚礼请柬，地点在老家酒店。你人没回去，但红包不能装作没看到。",
+        delta: [0, -1, -600, 0, 0, 0]
+      },
+      {
+        tag: "手机碎屏",
+        body: "早高峰挤地铁时手机从手里滑下去，屏幕裂出一条很有存在感的纹路。",
+        delta: [0, -2, -420, 0, 0, 0]
+      },
+      {
+        tag: "项目餐补",
+        body: "上个月支援大促的餐补终于到账，虽然不多，但至少证明表格没有白填。",
+        delta: [0, 2, 380, 0, 0, 0]
+      },
+      {
+        tag: "朋友还钱",
+        body: "大学朋友终于把去年借的周转钱转回来了，还附带一句“最近刚缓过来”。",
+        delta: [0, 3, 500, 0, 0, 0]
+      },
+      {
+        tag: "牙齿补牙",
+        body: "牙疼拖了两周，最后还是去补牙。医生说还好来得不算太晚。",
+        delta: [0, -2, -520, 0, 5, 0]
+      },
+      {
+        tag: "房间维修",
+        body: "出租屋水龙头漏水，房东说耗材你先垫一下，下个月房租再说。",
+        delta: [0, -1, -180, 0, 0, 4]
+      },
+      {
+        tag: "绩效小奖",
+        body: "你负责的小活动被部门周会点名，月底多发了一点项目奖金。",
+        delta: [3, 2, 700, 2, 0, 0]
+      },
+      {
+        tag: "家里人情",
+        body: "家里亲戚小孩满月，爸妈在群里暗示你现在工作了，也该表示一下。",
+        delta: [0, -1, -300, 0, 0, 0]
+      },
+      {
+        tag: "医保报销",
+        body: "之前看病的医保报销到账，虽然金额不大，但在月底看见入账消息还是像捡到一口气。",
+        delta: [0, 2, 260, 0, 2, 0]
+      },
+      {
+        tag: "电动车剐蹭赔付",
+        body: "上次被电动车蹭到后，你提交的材料终于有了结果，对方转来一笔赔付。",
+        delta: [0, 2, 300, 0, 0, 0]
+      },
+      {
+        tag: "电脑支架报销",
+        body: "你买的电脑支架被认定为办公辅助用品，报销流程走完，钱终于回来了。",
+        delta: [1, 1, 180, 0, 1, 0]
+      },
+      {
+        tag: "洗衣机维修",
+        body: "出租屋洗衣机甩干时像要起飞，师傅上门换了个零件，房东说这次你先垫。",
+        delta: [0, -2, -240, 0, 0, 3]
+      }
+    ];
+
+    const monthlyBills = {
+      rent: -3000,
+      utilities: -320,
+      commuteMeal: 0,
+      dailyMeal: -25
+    };
+
+    const state = {
+      month: 1,
+      day: 1,
+      phase: "dayWork",
+      workIndex: 0,
+      usedWorkIndices: [0],
+      lifeIndex: 0,
+      usedLifeIndices: [],
+      teaIndex: null,
+      usedTeaIndices: [],
+      weekendIndex: 0,
+      usedWeekendIndices: [],
+      nightIndex: 0,
+      usedNightIndices: [],
+      financeIndex: 0,
+      usedFinanceIndices: [],
+      commute: "mid",
+      lastLifeTag: "",
+      anxietyDayKey: "",
+      mealDayKey: "",
+      cash: 4000,
+      health: 75,
+      mood: 70,
+      work: 50,
+      peer: 60,
+      clean: 65,
+      monthlySettledMonth: 0,
+      nightMouse: false,
+      mouse: {},
+      shop: {},
+      nightMonth: null,
+      done: false,
+      saveVersion: 1
+    };
+
+    const board = document.getElementById("board");
+    const crawler = document.getElementById("crawler");
+    const toast = document.getElementById("toast");
+    const saveKey = "mouse-sim-save-v1";
+    const settingsKey = "mouse-sim-settings-v1";
+    const memoryStorage = {};
+    let settings = loadSettings();
+    let tutorialStep = 0;
+
+    function storageGet(key) {
+      try {
+        return localStorage.getItem(key);
+      } catch {
+        return memoryStorage[key] || null;
+      }
+    }
+
+    function storageSet(key, value) {
+      try {
+        localStorage.setItem(key, value);
+      } catch {
+        memoryStorage[key] = value;
+      }
+    }
+
+    function storageRemove(key) {
+      try {
+        localStorage.removeItem(key);
+      } catch {
+        delete memoryStorage[key];
+      }
+    }
+
+    function currentEvent() {
+      return schedule[state.month - 1].night;
+    }
+
+    function currentMonth() {
+      return schedule[state.month - 1];
+    }
+
+    function render() {
+      const month = currentMonth();
+      clearBoard();
+      if (state.cash < 0) return showBankruptcyResult();
+      document.getElementById("monthText").textContent = dateText();
+      document.getElementById("stat2Text").textContent = state.work;
+      document.getElementById("cashText").textContent = state.cash;
+      document.getElementById("healthText").textContent = state.health;
+      document.getElementById("moodText").textContent = state.mood;
+      document.getElementById("peerText").textContent = state.peer;
+      document.getElementById("cleanText").textContent = state.clean;
+      document.getElementById("result").classList.remove("show");
+      state.done = false;
+
+      applyDailyMealCost();
+      if (state.cash < 0) return showBankruptcyResult();
+      applyDailyAnxiety();
+      if (state.phase === "monthEnd") return renderMonthEnd();
+      if (state.phase === "weekend") return renderWeekendEvent();
+      if (state.phase === "life") return renderLifeEvent();
+      if (state.phase === "dayWork") return renderDayWorkEvent();
+      if (state.phase === "tea") return renderTeaEvent();
+      if (state.phase === "toNight") {
+        document.getElementById("eventTitle").textContent = `${currentMonth().label} ${state.day}日`;
+        document.getElementById("modeText").textContent = "准备";
+        setHint("夜晚", "点击下方按钮进入本月夜晚事件。");
+        showResult("夜晚开始", "白天事件已结束", "电脑合上之后，出租屋和生活会接着出题。");
+        document.getElementById("againBtn").textContent = "进入夜晚";
+        return;
+      }
+
+      const event = currentEvent();
+      document.getElementById("eventTitle").textContent = `${currentMonth().label} ${state.day}日`;
+      document.getElementById("modeText").textContent = modeName(event.type);
+      document.getElementById("result").classList.remove("show");
+      state.done = false;
+
+      if (state.nightMouse) {
+        document.getElementById("modeText").textContent = "抓老鼠";
+        return renderMouse(!state.mouse.level);
+      }
+      renderNightEvent();
+      saveGame();
+    }
+
+    function clearBoard() {
+      [...board.querySelectorAll(".hole,.shop,.overtime,.day-scene")].forEach((node) => node.remove());
+      crawler.style.display = "none";
+      crawler.classList.remove("moving");
+    }
+
+    function modeName(type) {
+      return { night: "夜晚选择", mouse: "抓鼠鼠", shop: "超市抢购", work: "加班" }[type];
+    }
+
+    function renderLifeEvent() {
+      const event = lifeEvents[state.lifeIndex];
+      if (!event) {
+        state.phase = "dayWork";
+        state.workIndex = ensureWorkIndex();
+        saveGame();
+        render();
+        return;
+      }
+      document.getElementById("eventTitle").textContent = `${currentMonth().label} ${state.day}日`;
+      document.getElementById("modeText").textContent = "生活事件";
+      document.getElementById("stat3Label").textContent = "预估工资";
+      document.getElementById("stat3Text").textContent = projectedSalary();
+      updateStatsOnly();
+      setHint("白天开始", "先处理一个随机生活事件，再进入大厂运营工作事件。");
+      renderChoiceScene(event.body, event.choices, (text, workDelta, moodDelta, cashDelta, peerDelta, healthDelta, cleanDelta) => {
+        applyDelta(workDelta, moodDelta, cashDelta, peerDelta, healthDelta, cleanDelta);
+        state.lastLifeTag = event.tag;
+        state.phase = "dayWork";
+        saveGame();
+        showResult("生活事件处理完毕", deltaMeta(workDelta, moodDelta, cashDelta, peerDelta, healthDelta, cleanDelta), `你选择了“${text}”。广东的一天先从现实小拳头开始。`);
+        if (state.phase === "bankrupt") return;
+        document.getElementById("againBtn").textContent = "去公司上班";
+      });
+      saveGame();
+    }
+
+    function renderWeekendEvent() {
+      const event = weekendEvents[state.weekendIndex];
+      if (!event) {
+        state.phase = "dayEnd";
+        saveGame();
+        showResult("周末结束", "没有新的周末事件", "这个周末平静过去，明天再面对新的工作日。");
+        return;
+      }
+      document.getElementById("eventTitle").textContent = `${currentMonth().label} ${state.day}日`;
+      document.getElementById("modeText").textContent = "周末";
+      document.getElementById("stat3Label").textContent = "预估工资";
+      document.getElementById("stat3Text").textContent = projectedSalary();
+      updateStatsOnly();
+      setHint("周末", "周末可以花钱提高生活质量、心态和发量，也可以省钱但恢复较少。");
+      renderChoiceScene(event.body, event.choices, (text, workDelta, moodDelta, cashDelta, peerDelta, healthDelta, cleanDelta) => {
+        applyDelta(workDelta, moodDelta, cashDelta, peerDelta, healthDelta, cleanDelta);
+        state.lastLifeTag = event.tag;
+        state.phase = "dayEnd";
+        saveGame();
+        showResult("周末事件结束", deltaMeta(workDelta, moodDelta, cashDelta, peerDelta, healthDelta, cleanDelta), `你选择了“${text}”。周末不是暂停键，只是另一种消耗和恢复。`);
+        if (state.phase === "bankrupt") return;
+        document.getElementById("againBtn").textContent = state.day >= DAYS_PER_MONTH ? "月末结算" : "进入下一天";
+      });
+      saveGame();
+    }
+
+    function applyDailyMealCost() {
+      if (!["life", "dayWork", "weekend"].includes(state.phase)) return;
+      const key = `${state.month}-${state.day}`;
+      if (state.mealDayKey === key) return;
+      state.cash += monthlyBills.dailyMeal;
+      state.mealDayKey = key;
+      setHint("日常饭钱", "今天吃饭预留 25 元，现金 -25。");
+      saveGame();
+    }
+
+    function applyDailyAnxiety() {
+      if (!["life", "dayWork", "weekend"].includes(state.phase)) return;
+      const key = `${state.month}-${state.day}`;
+      if (state.anxietyDayKey === key) return;
+      if (state.cash < nextMonthHousingCost()) {
+        state.mood = clamp(state.mood - 1, 0, 100);
+        state.anxietyDayKey = key;
+        setHint("余额焦虑", "现金低于下月房租水电预备金，今天心态 -1。");
+        saveGame();
+      }
+    }
+
+    function nextMonthHousingCost() {
+      return Math.abs(monthlyBills.rent) + Math.abs(monthlyBills.utilities);
+    }
+
+    function renderMonthEnd() {
+      document.getElementById("eventTitle").textContent = `${currentMonth().label} ${state.day}日`;
+      document.getElementById("modeText").textContent = "账单";
+      document.getElementById("stat3Label").textContent = "本月工资";
+      document.getElementById("stat3Text").textContent = monthlySalary();
+      updateStatsOnly();
+      setHint("月末结算", "每个月结束后发工资，再扣房租水电。每天饭钱已经在当天扣除，随机收支与低数值惩罚也会在这里结算。");
+      const summary = settleMonthEnd();
+      showResult("月末结算", summary.meta, summary.copy);
+      if (state.phase === "bankrupt") return;
+      document.getElementById("againBtn").textContent = state.phase === "fired" ? "回到主界面" : state.month >= schedule.length ? "完成试用期" : "进入下个月";
+    }
+
+    function renderDayWorkEvent() {
+      const data = dayWorkEvents[ensureWorkIndex()];
+      if (!data) {
+        scheduleTeaAfterWork();
+        saveGame();
+        render();
+        return;
+      }
+      document.getElementById("eventTitle").textContent = `${currentMonth().label} ${state.day}日`;
+      document.getElementById("modeText").textContent = "工作时间";
+      document.getElementById("stat3Label").textContent = "预估工资";
+      document.getElementById("stat3Text").textContent = projectedSalary();
+      updateStatsOnly();
+      setHint("工作时间", "选择运营岗白天的处理方式。晚上会进入本月夜晚事件。");
+      renderChoiceScene(data.body, data.choices, (text, workDelta, moodDelta, cashDelta, peerDelta, healthDelta, cleanDelta) => {
+        applyDelta(workDelta, moodDelta, cashDelta, peerDelta, healthDelta);
+        scheduleTeaAfterWork();
+        state.nightMonth = null;
+        saveGame();
+        showResult("工作事件结束", deltaMeta(workDelta, moodDelta, cashDelta, peerDelta, healthDelta, cleanDelta), `你选择了“${text}”。`);
+        if (state.phase === "bankrupt") return;
+        document.getElementById("againBtn").textContent = state.phase === "tea" ? "去茶水间" : "进入夜晚";
+      });
+      saveGame();
+    }
+
+    function scheduleTeaAfterWork() {
+      state.teaIndex = pickTeaIndex(state.month);
+      state.phase = state.teaIndex === null ? "toNight" : "tea";
+    }
+
+    function renderTeaEvent() {
+      const event = teaEvents[state.teaIndex];
+      if (!event) {
+        state.phase = "toNight";
+        saveGame();
+        render();
+        return;
+      }
+      document.getElementById("eventTitle").textContent = `${currentMonth().label} ${state.day}日`;
+      document.getElementById("modeText").textContent = "茶水间";
+      document.getElementById("stat3Label").textContent = "预估工资";
+      document.getElementById("stat3Text").textContent = projectedSalary();
+      updateStatsOnly();
+      setHint("茶水间", "摸鱼不是单纯休息，也可能影响你在同事眼里的形象。");
+      renderChoiceScene(event.body, event.choices, (text, workDelta, moodDelta, cashDelta, peerDelta, healthDelta, cleanDelta) => {
+        applyDelta(workDelta, moodDelta, cashDelta, peerDelta, healthDelta, cleanDelta);
+        state.phase = "toNight";
+        state.nightMonth = null;
+        saveGame();
+        showResult("茶水间事件结束", deltaMeta(workDelta, moodDelta, cashDelta, peerDelta, healthDelta, cleanDelta), `你选择了“${text}”。同事印象有时比日报更难改。`);
+        if (state.phase === "bankrupt") return;
+        document.getElementById("againBtn").textContent = "进入夜晚";
+      });
+      saveGame();
+    }
+
+    function renderNightEvent() {
+      const event = nightEvents[state.nightIndex];
+      if (!event) {
+        showResult("平静夜晚", "没有新的夜晚事件", "今晚没有新的突发状况。你把出租屋简单收拾了一下，尽量早点睡。");
+        return;
+      }
+      const choices = availableNightChoices(event);
+      document.getElementById("eventTitle").textContent = `${currentMonth().label} ${state.day}日`;
+      document.getElementById("modeText").textContent = "夜晚";
+      document.getElementById("stat3Label").textContent = "预估工资";
+      document.getElementById("stat3Text").textContent = projectedSalary();
+      updateStatsOnly();
+      setHint("夜晚选择", nightChoiceHint(choices.length));
+      renderChoiceScene(nightBody(event.body, choices.length), choices, (text, workDelta, moodDelta, cashDelta, peerDelta, healthDelta) => {
+        const previousClean = state.clean;
+        const cleanDelta = choiceCleanDelta(text, event);
+        const isHousework = nightChoiceType(event, text) === "housework";
+        applyDelta(workDelta, moodDelta, cashDelta, peerDelta, healthDelta, cleanDelta);
+        saveGame();
+        if (isHousework && previousClean < 25 && Math.random() < 0.42) {
+          state.nightMouse = true;
+          state.mouse = {};
+          saveGame();
+          showResult("家务做到一半", deltaMeta(workDelta, moodDelta, cashDelta, peerDelta, healthDelta, cleanDelta), "你拖开纸箱时，角落里突然窜出一只小老鼠。房间太乱的时候，生活会主动加戏。");
+          document.getElementById("againBtn").textContent = "抓老鼠";
+          return;
+        }
+        showResult("夜晚结束", deltaMeta(workDelta, moodDelta, cashDelta, peerDelta, healthDelta, cleanDelta), `你选择了“${text}”。夜晚的选择会累积成第二天的状态。`);
+      });
+      saveGame();
+    }
+
+    function availableNightChoices(event) {
+      if (state.clean < 25) return event.choices.filter((choice) => nightChoiceType(event, choice[0]) === "housework");
+      if (state.lastLifeTag === "回南天") return event.choices.filter((choice) => nightChoiceType(event, choice[0]) === "housework");
+      if (state.lastLifeTag === "台风") return event.choices.filter((choice) => nightChoiceType(event, choice[0]) !== "outing");
+      if (state.health < 25) return event.choices.filter((choice) => nightChoiceType(event, choice[0]) !== "outing");
+      return event.choices;
+    }
+
+    function nightChoiceHint(count) {
+      if (state.clean < 25) return "出租屋太乱了，今晚必须先做家务。整洁度太低时还有几率触发抓老鼠。";
+      if (state.lastLifeTag === "回南天") return "白天回南天把被子和衣服都闷出味了，今晚只能先做家务收拾。";
+      if (state.lastLifeTag === "台风") return "台风天不适合出门，今晚只能在出租屋里处理生活或工作。";
+      if (state.health < 25) return "发量太危险，今晚不适合再出门折腾。";
+      return "晚上从家务、加班、出去玩里选一个方向。选择会影响明天触发什么事件。";
+    }
+
+    function nightBody(body, count) {
+      if (count > 1) return body;
+      return `${body}<br><br>但白天的生活事件把今晚的余地压没了，你现在只能先处理最现实的问题。`;
+    }
+
+    function nightChoiceType(event, text) {
+      const index = event.choices.findIndex(([choiceText]) => choiceText === text);
+      if (index === 0) return "housework";
+      if (index === 1) return "overtime";
+      if (index === 2) return "outing";
+      return "other";
+    }
+
+    function choiceCleanDelta(text, event = nightEvents[state.nightIndex]) {
+      const choice = event.choices.find(([choiceText]) => choiceText === text);
+      if (typeof choice?.[6] === "number") return choice[6];
+      const type = nightChoiceType(event, text);
+      if (type === "housework") return 8;
+      if (type === "overtime") return -8;
+      if (type === "outing") return -8;
+      return 0;
+    }
+
+    function renderChoiceScene(body, choices, onPick) {
+      const wrap = document.createElement("div");
+      wrap.className = "day-scene";
+      const card = document.createElement("div");
+      card.className = "scene-card";
+      card.innerHTML = `<div class="scene-kicker">${currentMonth().label}</div>${body}`;
+      const choiceWrap = document.createElement("div");
+      choiceWrap.className = "choices";
+      choices.forEach(([text, workDelta, moodDelta, cashDelta, peerDelta = 0, healthDelta = 0, cleanDelta = 0]) => {
+        const button = document.createElement("button");
+        button.className = "choice";
+        button.textContent = text;
+        button.addEventListener("click", () => onPick(text, workDelta, moodDelta, cashDelta, peerDelta, healthDelta, cleanDelta));
+        choiceWrap.appendChild(button);
+      });
+      wrap.appendChild(card);
+      wrap.appendChild(choiceWrap);
+      board.appendChild(wrap);
+    }
+
+    function renderMouse(reset = false) {
+      const event = currentEvent();
+      const level = state.nightMouse
+        ? mouseLevels[Math.min(mouseLevels.length - 1, Math.floor((state.month - 1) / 4))]
+        : mouseLevels[event.mouse];
+      if (reset) {
+        state.mouse = {
+          level,
+          stones: level.stones,
+          turn: 1,
+          current: level.start,
+          blocked: new Set(),
+          moving: false,
+          path: [level.start]
+        };
+        setHint("规则", "每回合点一个空洞放石子，观察鼠鼠的跑动习惯，封住关键洞，把它赶到绿色出口。");
+      }
+
+      const mouse = state.mouse;
+      document.getElementById("stat3Label").textContent = "回合";
+      document.getElementById("stat3Text").textContent = mouse.turn;
+      updateStatsOnly();
+
+      Object.entries(level.holes).forEach(([id, hole]) => {
+        const button = document.createElement("button");
+        button.className = "hole";
+        button.style.setProperty("--x", `${hole.x}%`);
+        button.style.setProperty("--y", `${hole.y}%`);
+        button.dataset.name = hole.name;
+        button.setAttribute("aria-label", `${hole.name}${hole.exit ? "出口" : "洞"}`);
+        if (hole.exit) button.classList.add("exit");
+        if (mouse.blocked.has(id)) button.classList.add("blocked");
+        if (mouse.current === id && !hole.exit) button.classList.add("current");
+        button.addEventListener("click", () => placeStone(id));
+        board.appendChild(button);
+      });
+
+      const current = level.holes[mouse.current] || level.holes[level.start];
+      crawler.style.setProperty("--cx", `${current.x}%`);
+      crawler.style.setProperty("--cy", `${current.y}%`);
+      crawler.style.display = mouse.current === "X" || state.done ? "none" : "block";
+      crawler.classList.toggle("moving", mouse.moving);
+    }
+
+    function placeStone(id) {
+      const mouse = state.mouse;
+      const level = mouse.level;
+      const holes = level.holes;
+      if (state.done || mouse.moving) return;
+      if (holes[id].exit) return showToast("出口不能堵，不然今晚大家都出不去。");
+      if (id === mouse.current) return showToast("鼠鼠正在这个洞里，石子放下去只会让你更慌。");
+      if (mouse.blocked.has(id)) return showToast("这个洞已经堵住了。");
+      if (mouse.stones <= 0) return showToast("没有石子了，只能看鼠鼠自由发挥。");
+
+      mouse.blocked.add(id);
+      mouse.stones -= 1;
+      setHint("你放下石子", `你堵住了「${holes[id].name}」。没有路线提示，只能靠观察它的下一步。`);
+      clearBoard();
+      renderMouse(false);
+      saveGame();
+      setTimeout(moveMouse, 420);
+    }
+
+    function moveMouse() {
+      const mouse = state.mouse;
+      const level = mouse.level;
+      const holes = level.holes;
+      mouse.moving = true;
+      clearBoard();
+      renderMouse(false);
+
+      const options = level.priorities[mouse.current].filter((id) => !mouse.blocked.has(id));
+      if (!options.length) return finishMouse(false, "困在墙里", "你把鼠鼠堵在洞网深处了，但它没有被赶出来。出租屋安静了一会儿，随后你开始担心它是不是在里面囤粮。");
+
+      const old = mouse.current;
+      const next = options[0];
+      mouse.current = next;
+      mouse.path.push(next);
+      animateCrawler(level, old, next);
+
+      setTimeout(() => {
+        if (next === "X") return finishMouse(true, "成功驱赶", "鼠鼠被赶到出口，抱着空气里的外卖味连夜离开。");
+        mouse.turn += 1;
+        state.mood -= 2;
+        mouse.moving = false;
+        const jump = getDistance(holes[old], holes[next]) > 38;
+        setHint("它移动了", `鼠鼠从「${holes[old].name}」${jump ? "突然横穿" : "小跑"}到「${holes[next].name}」。${jump ? "它不一定去最近的洞，记住这种跳点。" : "记住这一步，下一次就能预判它。"}`);
+        if (mouse.turn > level.maxTurns) return finishMouse(false, "驱赶失败", "石子没能形成有效压力，鼠鼠在洞网里跑出了一条通勤路线。今晚心态扣绩效。");
+        if (mouse.stones <= 0) setTimeout(moveMouse, 650);
+        else {
+          clearBoard();
+          renderMouse(false);
+          saveGame();
+        }
+      }, 620);
+    }
+
+    function animateCrawler(level, from, to) {
+      const oldHole = level.holes[from];
+      const nextHole = level.holes[to];
+      const angle = Math.atan2(nextHole.y - oldHole.y, nextHole.x - oldHole.x) * 180 / Math.PI;
+      const jump = getDistance(oldHole, nextHole) > 38;
+      crawler.style.rotate = `${angle}deg`;
+      crawler.style.transitionDuration = jump ? ".45s" : ".72s";
+      requestAnimationFrame(() => {
+        crawler.style.setProperty("--cx", `${nextHole.x}%`);
+        crawler.style.setProperty("--cy", `${nextHole.y}%`);
+      });
+    }
+
+    function finishMouse(success, title, copy) {
+      const level = state.mouse.level;
+      const path = state.mouse.path.map((id) => level.holes[id].name).join(" → ");
+      state.nightMouse = false;
+      state.mouse = {};
+      if (success) {
+        state.mood = clamp(state.mood + 4, 0, 100);
+        state.clean = clamp(state.clean + 6, 0, 100);
+      } else {
+        state.mood = clamp(state.mood - 5, 0, 100);
+        state.clean = clamp(state.clean - 8, 0, 100);
+      }
+      showResult(title, `路径：${path} · 心态 ${success ? "+4" : "-5"} · 整洁度 ${success ? "+6" : "-8"}`, copy);
+    }
+
+    function renderShop(reset = false) {
+      const event = currentEvent();
+      if (reset) {
+        state.shop = {
+          grid: Array(16).fill(0),
+          moves: event.moves,
+          target: event.target,
+          score: 0
+        };
+        spawnFood();
+        spawnFood();
+        setHint("规则", `上下左右滑动或按方向键。相同食物会合成，目标是合成「${foods[event.target].name}」。`);
+      }
+
+      document.getElementById("stat3Label").textContent = "目标";
+      document.getElementById("stat3Text").textContent = foods[state.shop.target].name.slice(0, 2);
+      updateStatsOnly();
+
+      const wrap = document.createElement("div");
+      wrap.className = "shop";
+      const grid = document.createElement("div");
+      grid.className = "shop-grid";
+      grid.tabIndex = 0;
+      state.shop.grid.forEach((value) => {
+        const tile = document.createElement("div");
+        tile.className = value ? "tile" : "tile empty";
+        if (value) {
+          tile.style.background = foods[value].color;
+          tile.innerHTML = `<span>${foods[value].name}</span><small>${2 ** value}</small>`;
+        }
+        grid.appendChild(tile);
+      });
+      wrap.appendChild(grid);
+      board.appendChild(wrap);
+      setupShopInput(grid);
+    }
+
+    function setupShopInput(grid) {
+      grid.focus();
+      grid.onkeydown = (event) => {
+        const map = { ArrowLeft: "left", ArrowRight: "right", ArrowUp: "up", ArrowDown: "down" };
+        if (!map[event.key]) return;
+        event.preventDefault();
+        event.stopPropagation();
+        moveShop(map[event.key]);
+      };
+
+      let start = null;
+      grid.ontouchstart = (event) => {
+        const t = event.touches[0];
+        start = { x: t.clientX, y: t.clientY };
+      };
+      grid.ontouchend = (event) => {
+        if (!start) return;
+        const t = event.changedTouches[0];
+        const dx = t.clientX - start.x;
+        const dy = t.clientY - start.y;
+        if (Math.max(Math.abs(dx), Math.abs(dy)) < 20) return;
+        moveShop(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "right" : "left") : (dy > 0 ? "down" : "up"));
+        start = null;
+      };
+    }
+
+    function moveShop(dir) {
+      if (state.done || state.shop.moves <= 0) return;
+      const before = state.shop.grid.join(",");
+      const result = slideGrid(state.shop.grid, dir);
+      state.shop.grid = result.grid;
+      state.shop.score += result.score;
+      if (before === state.shop.grid.join(",")) return showToast("这个方向挪不动，购物车卡住了。");
+      state.shop.moves -= 1;
+      spawnFood();
+      const max = Math.max(...state.shop.grid);
+      setHint("抢购中", `当前最高合成：${foods[max].name}。剩余 ${state.shop.moves} 步。`);
+      clearBoard();
+      renderShop(false);
+      saveGame();
+      if (max >= state.shop.target) return finishShop(true);
+      if (state.shop.moves <= 0 || !canMoveShop()) return finishShop(false);
+    }
+
+    function slideGrid(grid, dir) {
+      const next = Array(16).fill(0);
+      let score = 0;
+      const lines = getLines(dir);
+      lines.forEach((line) => {
+        const values = line.map((idx) => grid[idx]).filter(Boolean);
+        const merged = [];
+        for (let i = 0; i < values.length; i += 1) {
+          if (values[i] === values[i + 1]) {
+            merged.push(values[i] + 1);
+            score += 2 ** (values[i] + 1);
+            i += 1;
+          } else {
+            merged.push(values[i]);
+          }
+        }
+        line.forEach((idx, i) => next[idx] = merged[i] || 0);
+      });
+      return { grid: next, score };
+    }
+
+    function getLines(dir) {
+      const lines = [];
+      for (let i = 0; i < 4; i += 1) {
+        if (dir === "left") lines.push([0,1,2,3].map((x) => i * 4 + x));
+        if (dir === "right") lines.push([3,2,1,0].map((x) => i * 4 + x));
+        if (dir === "up") lines.push([0,1,2,3].map((y) => y * 4 + i));
+        if (dir === "down") lines.push([3,2,1,0].map((y) => y * 4 + i));
+      }
+      return lines;
+    }
+
+    function spawnFood() {
+      const empty = state.shop.grid.map((v, i) => v ? null : i).filter((v) => v !== null);
+      if (!empty.length) return;
+      const index = empty[Math.floor(Math.random() * empty.length)];
+      state.shop.grid[index] = Math.random() < .82 ? 1 : 2;
+    }
+
+    function canMoveShop() {
+      if (state.shop.grid.some((v) => !v)) return true;
+      return ["left", "right", "up", "down"].some((dir) => slideGrid(state.shop.grid, dir).grid.join(",") !== state.shop.grid.join(","));
+    }
+
+    function finishShop(success) {
+      const max = Math.max(...state.shop.grid);
+      if (success) {
+        state.cash += 180;
+        state.mood += 3;
+        showResult("抢购成功", `最高：${foods[max].name} · 现金 +180 · 心态 +3`, "你在临期区打出一套合成连招，用比外卖便宜的预算凑出了一顿像样晚饭。");
+      } else {
+        state.cash -= 120;
+        state.mood -= 3;
+        showResult("抢购失败", `最高：${foods[max].name} · 现金 -120 · 心态 -3`, "购物车里塞满了零散小东西，结账时发现便宜没有想象中便宜。");
+      }
+    }
+
+    function renderWork(reset = false) {
+      const event = currentEvent();
+      const data = workEvents[event.work];
+      if (reset) setHint("规则", "选择一种加班处理方式。它会影响上级评价、现金和心态。");
+      document.getElementById("stat3Label").textContent = "预估工资";
+      document.getElementById("stat3Text").textContent = projectedSalary();
+      updateStatsOnly();
+
+      const wrap = document.createElement("div");
+      wrap.className = "overtime";
+      const card = document.createElement("div");
+      card.className = "work-card";
+      card.textContent = data.body;
+      const choices = document.createElement("div");
+      choices.className = "choices";
+      data.choices.forEach(([text, workDelta, moodDelta, cashDelta, peerDelta = 0]) => {
+        const button = document.createElement("button");
+        button.className = "choice";
+        button.textContent = text;
+        button.addEventListener("click", () => finishWork(text, workDelta, moodDelta, cashDelta, peerDelta));
+        choices.appendChild(button);
+      });
+      wrap.appendChild(card);
+      wrap.appendChild(choices);
+      board.appendChild(wrap);
+    }
+
+    function finishWork(text, workDelta, moodDelta, cashDelta, peerDelta = 0, healthDelta = 0) {
+      applyDelta(workDelta, moodDelta, cashDelta, peerDelta, healthDelta, -6);
+      showResult("加班结束", deltaMeta(workDelta, moodDelta, cashDelta, peerDelta, healthDelta, -6), `你选择了“${text}”。运营岗的夜晚没有鼠鼠，但有群消息在桌面右上角闪。`);
+    }
+
+    function applyDelta(workDelta = 0, moodDelta = 0, cashDelta = 0, peerDelta = 0, healthDelta = 0, cleanDelta = 0) {
+      let adjustedPeer = peerDelta;
+      if (workDelta >= 7 && peerDelta <= 0) adjustedPeer -= 2;
+      if (workDelta >= 5 && moodDelta <= -4 && peerDelta <= 0) adjustedPeer -= 1;
+      state.work = clamp(state.work + workDelta, 0, 100);
+      state.health = clamp(state.health + healthDelta, 0, 100);
+      state.mood = clamp(state.mood + moodDelta, 0, 100);
+      state.clean = clamp(state.clean + cleanDelta, 0, 100);
+      state.cash += cashDelta;
+      state.peer = clamp(state.peer + adjustedPeer, 0, 100);
+      return adjustedPeer;
+    }
+
+    function deltaMeta(workDelta = 0, moodDelta = 0, cashDelta = 0, peerDelta = 0, healthDelta = 0, cleanDelta = 0) {
+      let adjustedPeer = peerDelta;
+      if (workDelta >= 7 && peerDelta <= 0) adjustedPeer -= 2;
+      if (workDelta >= 5 && moodDelta <= -4 && peerDelta <= 0) adjustedPeer -= 1;
+      return `上级评价 ${signed(workDelta)} · 发量 ${signed(healthDelta)} · 心态 ${signed(moodDelta)} · 现金 ${signed(cashDelta)} · 同事印象 ${signed(adjustedPeer)} · 整洁度 ${signed(cleanDelta)}`;
+    }
+
+    function compactEffects(workDelta = 0, moodDelta = 0, cashDelta = 0, peerDelta = 0, healthDelta = 0, cleanDelta = 0) {
+      return [
+        workDelta ? `表现${signed(workDelta)}` : "",
+        healthDelta ? `发量${signed(healthDelta)}` : "",
+        moodDelta ? `心态${signed(moodDelta)}` : "",
+        cashDelta ? `现金${signed(cashDelta)}` : "",
+        peerDelta ? `印象${signed(peerDelta)}` : "",
+        cleanDelta ? `整洁${signed(cleanDelta)}` : ""
+      ].filter(Boolean).join("，") || "状态稳定";
+    }
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function clearAchievementCards() {
+      const list = document.getElementById("achievementList");
+      if (list) list.innerHTML = "";
+    }
+
+    function renderAchievementCards(items) {
+      const list = document.getElementById("achievementList");
+      if (!list) return;
+      list.innerHTML = "";
+      items.forEach((item) => {
+        const card = document.createElement("div");
+        card.className = "achievement-card";
+        card.innerHTML = `
+          <div class="achievement-icon">${item.icon}</div>
+          <div>
+            <div class="achievement-name">${item.title}</div>
+            <div class="achievement-desc">${item.copy}</div>
+          </div>
+        `;
+        list.appendChild(card);
+      });
+    }
+
+    function showResult(title, meta, copy) {
+      if (state.cash < 0) return showBankruptcyResult();
+      state.done = true;
+      clearAchievementCards();
+      document.getElementById("resultTitle").textContent = title;
+      document.getElementById("resultMeta").textContent = meta;
+      document.getElementById("resultCopy").textContent = copy;
+      document.getElementById("againBtn").textContent = resultButtonText();
+      document.getElementById("result").classList.add("show");
+      updateStatsOnly();
+      saveGame();
+    }
+
+    function resultButtonText() {
+      if (state.nightMouse) return "抓老鼠";
+      if (state.phase === "bankrupt") return "回到主界面";
+      if (state.phase === "fired") return "回到主界面";
+      if (state.phase === "monthEnd") return state.month >= schedule.length ? "完成试用期" : "进入下个月";
+      if (state.phase === "life") return "去公司上班";
+      if (state.phase === "dayWork") return "去茶水间";
+      if (state.phase === "tea") return "进入夜晚";
+      if (state.phase === "dayEnd") return state.day >= DAYS_PER_MONTH ? "月末结算" : "进入下一天";
+      if (state.phase === "toNight") return "进入夜晚";
+      if (state.phase === "night") return state.day >= DAYS_PER_MONTH ? "月末结算" : "进入下一天";
+      if (state.month >= schedule.length) return "完成试用期";
+      return "进入下个月";
+    }
+
+    function nextStep() {
+      if (!state.done) return;
+      if (state.phase === "finished") {
+        document.getElementById("game").classList.add("hidden");
+        document.getElementById("menuScreen").classList.remove("hidden");
+        return;
+      }
+      if (state.phase === "fired" || state.phase === "bankrupt") {
+        document.getElementById("game").classList.add("hidden");
+        document.getElementById("menuScreen").classList.remove("hidden");
+        return;
+      }
+      if (state.nightMouse) {
+        state.done = false;
+        render();
+        return;
+      }
+      if (state.phase === "monthEnd") {
+        if (state.month >= schedule.length) {
+          showYearEnd();
+          return;
+        }
+        state.month += 1;
+        startMonth();
+        saveGame();
+        render();
+        return;
+      }
+      if (state.phase === "life" || state.phase === "dayWork" || state.phase === "tea" || state.phase === "weekend") {
+        render();
+        return;
+      }
+      if (state.phase === "dayEnd") {
+        if (state.day >= DAYS_PER_MONTH) {
+          state.phase = "monthEnd";
+        } else {
+          startNextDay();
+        }
+        saveGame();
+        render();
+        return;
+      }
+      if (state.phase === "toNight") {
+        state.phase = "night";
+        saveGame();
+        render();
+        return;
+      }
+      if (state.day >= DAYS_PER_MONTH) {
+        state.phase = "monthEnd";
+      } else {
+        startNextDay();
+      }
+      saveGame();
+      render();
+    }
+
+    function startMonth() {
+      state.day = 1;
+      state.phase = "life";
+      state.lifeIndex = pickLifeIndex(state.month);
+      state.workIndex = pickWorkIndex();
+      state.teaIndex = null;
+      state.weekendIndex = pickWeekendIndex();
+      state.nightIndex = pickNightIndex(state.month);
+      state.financeIndex = pickFinanceIndex();
+      state.lastLifeTag = "";
+      state.anxietyDayKey = "";
+    }
+
+    function startNextDay() {
+      state.day += 1;
+      state.phase = isWeekendDay() ? "weekend" : "life";
+      state.lifeIndex = pickLifeIndex(state.month);
+      state.workIndex = pickWorkIndex();
+      state.teaIndex = null;
+      state.weekendIndex = pickWeekendIndex();
+      state.nightIndex = pickNightIndex(state.month);
+      state.lastLifeTag = "";
+    }
+
+    function isWeekendDay() {
+      return state.day % 7 === 6 || state.day % 7 === 0;
+    }
+
+    function weekdayText() {
+      return ["周一", "周二", "周三", "周四", "周五", "周六", "周日"][(state.day - 1) % 7];
+    }
+
+    function dateText() {
+      return `${currentMonth().label}\n${state.day}日\n${weekdayText()}`;
+    }
+
+    function showBankruptcyResult() {
+      state.done = true;
+      state.phase = "bankrupt";
+      state.nightMouse = false;
+      state.cash = 0;
+      clearBoard();
+      document.getElementById("eventTitle").textContent = `${currentMonth().label} ${state.day}日`;
+      document.getElementById("modeText").textContent = "结局";
+      document.getElementById("resultTitle").textContent = "破产结局";
+      document.getElementById("resultMeta").textContent = "现金 0 · 房租水电断供";
+      document.getElementById("resultCopy").textContent = "你翻完所有支付软件，发现下个月房租和水电已经凑不出来。最终只能拖着行李箱，灰溜溜滚回老家。";
+      renderAchievementCards([{
+        icon: "破",
+        title: "现实：灰溜溜回老家",
+        copy: "现金不能小于 0。房租水电断供后，这段试用期提前结束。"
+      }]);
+      document.getElementById("againBtn").textContent = "回到主界面";
+      document.getElementById("result").classList.add("show");
+      updateStatsOnly();
+      storageRemove(saveKey);
+    }
+
+    function showYearEnd() {
+      const ending = endingProfile();
+      state.done = true;
+      state.phase = "finished";
+      document.getElementById("resultTitle").textContent = ending.title;
+      document.getElementById("resultMeta").textContent = `现金 ${state.cash} · 发量 ${state.health} · 心态 ${state.mood} · 上级评价 ${state.work} · 同事印象 ${state.peer} · 整洁度 ${state.clean}`;
+      document.getElementById("resultCopy").textContent = ending.summary;
+      renderAchievementCards([ending.reality, ...ending.achievements]);
+      document.getElementById("againBtn").textContent = "回到主界面";
+      document.getElementById("result").classList.add("show");
+      storageRemove(saveKey);
+    }
+
+    function endingProfile() {
+      const achievements = [];
+      let reality;
+
+      if (state.work < 50) {
+        reality = {
+          icon: "未",
+          title: "现实：无法转正",
+          copy: "试用期答辩结束后，领导说你努力过，但交付质量和节奏都没有达到岗位要求。你没能转正，只能重新开始投简历。"
+        };
+      } else if (state.work >= 85) {
+        reality = {
+          icon: "优",
+          title: "现实：优秀转正",
+          copy: "你从新人训活到了转正评估，甚至开始能听懂老板说的增长闭环。转正邮件发下来时，你第一次觉得自己不是误入大厂。"
+        };
+      } else if (state.work >= 50 && state.work < 70) {
+        reality = {
+          icon: "转",
+          title: "现实：普通转正",
+          copy: "你撑过了试用期，也拿到了转正邮件。但因为表现不算亮眼，两年后组里大佬离职、业务线合并时，你很容易被卷进裁员名单。"
+        };
+        achievements.push({
+          icon: "裁",
+          title: "未来：组解散裁员风险",
+          copy: "表现不好不坏，刚好能转正，也刚好不够亮眼。业务线变化时，你容易被当成可替换的人。"
+        });
+      } else {
+        reality = {
+          icon: "转",
+          title: "现实：普通转正",
+          copy: "这四个月你确实被生活和工作轮流教育，但至少撑完了试用期。你转正了，也更清楚这份工作会继续消耗什么。"
+        };
+      }
+
+      if (state.mood <= 15) achievements.push({ icon: "心", title: "未来：心态长期告急", copy: "两年后，你对消息提示音越来越敏感。你被迫离开岗位，开始一段很长的休养。" });
+      if (state.health < 25) achievements.push({ icon: "发", title: "未来：头顶发亮", copy: "两年后，你早上照镜子，发现头顶在卫生间灯光下亮得很诚实。工作还在继续，但发际线已经先一步完成转型。" });
+      if (state.peer < 30) achievements.push({ icon: "锅", title: "未来：背锅体质", copy: "两年后，一次活动数据异常被层层追责。因为平时同事印象太差，锅最后落到你头上。" });
+      if (state.cash >= 28000) achievements.push({ icon: "房", title: "未来：首付希望", copy: "两年后，你靠奖金、克制消费和一点运气攒出一笔首付款。房子不大，离公司也不近，但终于不用每次听见房东语音都心跳加速。" });
+      if (state.cash < 3320) achievements.push({ icon: "钱", title: "未来：余额焦虑", copy: "你虽然熬过了试用期，但账户余额离下个月房租水电太近。每次房东发语音，你都会先深呼吸。" });
+      if (state.clean < 25) achievements.push({ icon: "屋", title: "未来：出租屋反噬", copy: "房间整洁度已经低到会反过来影响生活。找工牌、洗衣服、躲房东检查，都变成额外体力活。" });
+      if (state.mood >= 70) achievements.push({ icon: "稳", title: "未来：精神续航", copy: "你没有把每一次消息提醒都当成审判。生活虽然累，但你还保留了一点喘气的空间。" });
+      if (state.peer >= 80) achievements.push({ icon: "友", title: "未来：同事缓冲垫", copy: "你没有把协作关系做死。以后真有事故，至少有人愿意先听你解释。" });
+      if (state.health >= 80) achievements.push({ icon: "发", title: "未来：发量守门成功", copy: "你没有把每一次熬夜都写在头顶上。镜子里的自己暂时还算完整。" });
+
+      return {
+        title: achievements.length ? reality.title + " + " + achievements.length + " 项成就" : reality.title,
+        summary: achievements.length ? "本次试用期同时触发了多个现实/未来结果。" : "本次试用期平稳落地，没有触发额外未来成就。",
+        reality,
+        achievements
+      };
+    }
+
+    function resetAll() {
+      Object.assign(state, initialState());
+      saveGame();
+      render();
+    }
+
+    function initialState() {
+      const fresh = {
+        month: 1,
+        day: 1,
+        phase: "dayWork",
+        workIndex: 0,
+        usedWorkIndices: [0],
+        lifeIndex: 0,
+        usedLifeIndices: [],
+        teaIndex: null,
+        usedTeaIndices: [],
+        weekendIndex: 0,
+        usedWeekendIndices: [],
+        nightIndex: 0,
+        usedNightIndices: [],
+        financeIndex: 0,
+        usedFinanceIndices: [],
+        commute: pickCommute(),
+        lastLifeTag: "",
+        anxietyDayKey: "",
+        cash: 4000,
+        health: 75,
+        mood: 70,
+        work: 50,
+        peer: 60,
+        clean: 65,
+        monthlySettledMonth: 0,
+        nightMouse: false,
+        mouse: {},
+        shop: {},
+        nightMonth: null,
+        done: false,
+        saveVersion: 1
+      };
+      fresh.workIndex = 0;
+      fresh.teaIndex = null;
+      fresh.weekendIndex = pickWeekendIndex(fresh.usedWeekendIndices);
+      fresh.nightIndex = pickNightIndex(1, fresh.usedNightIndices, fresh.commute, fresh.health);
+      fresh.financeIndex = pickFinanceIndex(fresh.usedFinanceIndices);
+      return fresh;
+    }
+
+    function settleMonthEnd() {
+      if (state.monthlySettledMonth === state.month) {
+        return { meta: "本月账单已结算", copy: "这个月的工资、房租水电和随机收支已经记账。深呼吸，准备进入下一段生活。" };
+      }
+      if (state.work < 18) {
+        state.monthlySettledMonth = state.month;
+        state.phase = "fired";
+        storageRemove(saveKey);
+        return {
+          meta: `上级评价 ${state.work} · 未通过绩效沟通`,
+          copy: "月末绩效沟通里，领导说你最近交付风险太高，岗位不再继续保留。试用期提前结束。"
+        };
+      }
+      const financeEvent = monthlyFinanceEvents[state.financeIndex];
+      const salary = monthlySalary();
+      const fixedCash = salary + monthlyBills.rent + monthlyBills.utilities + monthlyBills.commuteMeal;
+      const [workDelta, moodDelta, eventCashDelta, peerDelta, healthDelta, cleanDelta] = financeEvent
+        ? financeEvent.delta
+        : [0, 0, 0, 0, 0, 0];
+      const penalty = monthlyPenalty();
+      state.cash += fixedCash;
+      applyDelta(workDelta + penalty.work, moodDelta + penalty.mood, eventCashDelta + penalty.cash, peerDelta + penalty.peer, healthDelta + penalty.health, cleanDelta + penalty.clean);
+      state.monthlySettledMonth = state.month;
+      const billText = `工资 +${salary} · 房租 ${monthlyBills.rent} · 水电网 ${monthlyBills.utilities} · 饭钱已按每日结算`;
+      const eventText = financeEvent ? `${financeEvent.tag}：现金 ${signed(eventCashDelta)}` : "本月没有新的随机收支";
+      const penaltyText = penalty.title ? ` · ${penalty.title}` : "";
+      return {
+        meta: `${billText} · ${eventText}${penaltyText}`,
+        copy: `${financeEvent ? financeEvent.body : "这个月没有额外的人情、维修或补贴入账，账本安静得有点难得。"}${penalty.copy ? ` ${penalty.copy}` : ""}`
+      };
+    }
+
+    function monthlySalary() {
+      if (state.work >= 85) return 12500;
+      if (state.work >= 70) return 10500;
+      if (state.work >= 50) return 8500;
+      if (state.work >= 30) return 6500;
+      if (state.work >= 18) return 4200;
+      return 0;
+    }
+
+    function projectedSalary() {
+      return monthlySalary();
+    }
+
+    function monthlyPenalty() {
+      if (state.clean < 18 && Math.random() < 0.55) {
+        return {
+          title: "整洁过低：被房东赶出门",
+          copy: "房东临时带人来看漏水，看到屋里外卖袋、潮衣服和纸箱堆成一片，当场说不续租。你只能咬牙多掏中介费和押金，换到更远一点的房子。",
+          work: -1,
+          mood: -8,
+          cash: -2600,
+          peer: 0,
+          health: -2,
+          clean: 35
+        };
+      }
+      if (state.health < 28) {
+        return {
+          title: "发量过低：压力就医",
+          copy: "连续熬夜和通勤把头皮状态拖到报警，你请了半天假去医院，挂号、检查和药费一起扣钱。",
+          work: -2,
+          mood: -6,
+          cash: -650,
+          peer: 0,
+          health: 12,
+          clean: -3
+        };
+      }
+      if (state.peer < 28) {
+        return {
+          title: "同事印象过低：被背锅",
+          copy: "前期协作留下了坏印象，活动数据异常时有人把执行问题推到你身上，你花了很久才解释清楚。",
+          work: -7,
+          mood: -6,
+          cash: 0,
+          peer: -10,
+          health: -2,
+          clean: -2
+        };
+      }
+      if (state.mood < 24) {
+        return {
+          title: "心态过低：效率崩盘",
+          copy: "你不是不想做事，只是每打开一个文档都像在加载失败。这个月开局就有点慢。",
+          work: -4,
+          mood: 4,
+          cash: 0,
+          peer: -2,
+          health: -2,
+          clean: -2
+        };
+      }
+      if (state.cash < 0) {
+        return {
+          title: "现金为负：账单滞纳",
+          copy: "账户余额见底，花呗、信用卡和房租提醒一起弹出来。你只能先拆东墙补西墙。",
+          work: 0,
+          mood: -5,
+          cash: -160,
+          peer: 0,
+          health: -1,
+          clean: -1
+        };
+      }
+      if (state.clean < 20) {
+        return {
+          title: "整洁过低：出租屋反噬",
+          copy: "房间乱到早上找不到工牌，外卖袋和衣服堆在一起，连出门都比平时更慢。",
+          work: -2,
+          mood: -4,
+          cash: 0,
+          peer: 0,
+          health: -3,
+          clean: -5
+        };
+      }
+      return { title: "", copy: "", work: 0, mood: 0, cash: 0, peer: 0, health: 0, clean: 0 };
+    }
+
+    function pickLifeIndex(month, used = state.usedLifeIndices) {
+      const monthLabel = schedule[month - 1].label;
+      const seasonal = {
+        "9月": [0, 2, 3, 5, 6, 8],
+        "10月": [0, 1, 2, 6, 8, 11],
+        "11月": [0, 1, 2, 6, 10, 11],
+        "12月": [0, 1, 8, 9, 10, 11]
+      }[monthLabel] || lifeEvents.map((_, index) => index);
+      let weighted = seasonal.slice();
+      if (state.commute === "near") weighted = weighted.filter((index) => ![1, 6].includes(index)).concat([8, 9]);
+      if (state.commute === "far") weighted = weighted.concat([0, 1, 6, 10]);
+      if (state.health < 45) weighted = weighted.concat([0, 2, 5, 7, 10]);
+      let pool = [...new Set(weighted)].filter((index) => !used.includes(index));
+      if (!pool.length) pool = lifeEvents.map((_, index) => index).filter((index) => !used.includes(index));
+      if (!pool.length) {
+        used.length = 0;
+        pool = [...new Set(weighted)];
+      }
+      const picked = pool[Math.floor(Math.random() * pool.length)];
+      used.push(picked);
+      return picked;
+    }
+
+    function ensureWorkIndex() {
+      if (state.month === 1 && state.day === 1) return 0;
+      if (typeof state.workIndex === "number" && state.workIndex >= 0 && state.workIndex !== 0) return state.workIndex;
+      state.workIndex = pickWorkIndex();
+      return state.workIndex;
+    }
+
+    function pickWorkIndex(used = state.usedWorkIndices) {
+      if (state.month === 1 && state.day === 1) {
+        if (!used.includes(0)) used.push(0);
+        return 0;
+      }
+      const pool = dayWorkEvents
+        .map((_, index) => index)
+        .filter((index) => index !== 0 && !used.includes(index));
+      if (!pool.length) {
+        used.splice(0, used.length, 0);
+        const resetPool = dayWorkEvents.map((_, index) => index).filter((index) => index !== 0);
+        const picked = resetPool[Math.floor(Math.random() * resetPool.length)];
+        used.push(picked);
+        return picked;
+      }
+      const picked = pool[Math.floor(Math.random() * pool.length)];
+      used.push(picked);
+      return picked;
+    }
+
+    function pickTeaIndex(month, used = state.usedTeaIndices) {
+      if (used.length >= teaEvents.length) return null;
+      if (Math.random() > 0.18) return null;
+      let pool = teaEvents.map((_, index) => index).filter((index) => !used.includes(index));
+      if (!pool.length) return null;
+      const picked = pool[Math.floor(Math.random() * pool.length)];
+      used.push(picked);
+      return picked;
+    }
+
+    function pickWeekendIndex(used = state.usedWeekendIndices) {
+      let pool = weekendEvents.map((_, index) => index).filter((index) => !used.includes(index));
+      if (!pool.length) {
+        used.length = 0;
+        pool = weekendEvents.map((_, index) => index);
+      }
+      const picked = pool[Math.floor(Math.random() * pool.length)];
+      used.push(picked);
+      return picked;
+    }
+
+    function pickFinanceIndex(used = state.usedFinanceIndices) {
+      let pool = monthlyFinanceEvents.map((_, index) => index).filter((index) => !used.includes(index));
+      if (!pool.length) {
+        used.length = 0;
+        pool = monthlyFinanceEvents.map((_, index) => index);
+      }
+      const picked = pool[Math.floor(Math.random() * pool.length)];
+      used.push(picked);
+      return picked;
+    }
+
+    function pickNightIndex(month, used = state.usedNightIndices, commute = state.commute, health = state.health) {
+      let candidates = nightEvents
+        .map((event, index) => ({ event, index }))
+        .filter(({ event }) => !event.commute || event.commute === commute)
+        .map(({ index }) => index);
+      if (health < 45) candidates = candidates.concat([4]);
+      if (state.cash < 600) candidates = candidates.concat([0, 5]);
+      let pool = [...new Set(candidates)].filter((index) => !used.includes(index));
+      if (!pool.length) {
+        used.length = 0;
+        pool = [...new Set(candidates)];
+      }
+      const picked = pool[Math.floor(Math.random() * pool.length)];
+      used.push(picked);
+      return picked;
+    }
+
+    function pickCommute() {
+      const roll = Math.random();
+      if (roll < 0.25) return "near";
+      if (roll < 0.75) return "mid";
+      return "far";
+    }
+
+    function commuteText() {
+      return { near: "近", mid: "中", far: "远" }[state.commute] || "中";
+    }
+
+    function resetAllToMenu() {
+      resetAll();
+      document.getElementById("menuScreen").classList.add("hidden");
+      document.getElementById("game").classList.remove("hidden");
+      maybeTutorial();
+    }
+
+    function saveGame() {
+      storageSet(saveKey, JSON.stringify(serializeState()));
+      document.getElementById("continueBtn").disabled = false;
+    }
+
+    function serializeState() {
+      return {
+        month: state.month,
+        day: state.day,
+        phase: state.phase,
+        workIndex: state.workIndex,
+        usedWorkIndices: state.usedWorkIndices,
+        lifeIndex: state.lifeIndex,
+        usedLifeIndices: state.usedLifeIndices,
+        teaIndex: state.teaIndex,
+        usedTeaIndices: state.usedTeaIndices,
+        weekendIndex: state.weekendIndex,
+        usedWeekendIndices: state.usedWeekendIndices,
+        nightIndex: state.nightIndex,
+        usedNightIndices: state.usedNightIndices,
+        financeIndex: state.financeIndex,
+        usedFinanceIndices: state.usedFinanceIndices,
+        commute: state.commute,
+        lastLifeTag: state.lastLifeTag,
+        anxietyDayKey: state.anxietyDayKey,
+        mealDayKey: state.mealDayKey,
+        cash: state.cash,
+        health: state.health,
+        mood: state.mood,
+        work: state.work,
+        peer: state.peer,
+        clean: state.clean,
+        monthlySettledMonth: state.monthlySettledMonth,
+        nightMouse: state.nightMouse,
+        nightMonth: state.nightMonth,
+        done: state.done,
+        saveVersion: state.saveVersion,
+        mouse: state.mouse && state.mouse.level ? {
+          levelIndex: mouseLevels.indexOf(state.mouse.level),
+          stones: state.mouse.stones,
+          turn: state.mouse.turn,
+          current: state.mouse.current,
+          blocked: [...state.mouse.blocked],
+          moving: false,
+          path: state.mouse.path || []
+        } : {},
+        shop: state.shop || {}
+      };
+    }
+
+    function loadGame() {
+      const raw = storageGet(saveKey);
+      if (!raw) return false;
+      try {
+        const saved = JSON.parse(raw);
+        Object.assign(state, initialState(), saved);
+        if (state.phase === "monthStart") state.phase = "monthEnd";
+        state.usedWorkIndices = Array.isArray(saved.usedWorkIndices) ? saved.usedWorkIndices : [0];
+        state.usedLifeIndices = Array.isArray(saved.usedLifeIndices) ? saved.usedLifeIndices : [];
+        state.usedTeaIndices = Array.isArray(saved.usedTeaIndices) ? saved.usedTeaIndices : [];
+        state.usedWeekendIndices = Array.isArray(saved.usedWeekendIndices) ? saved.usedWeekendIndices : [];
+        state.usedNightIndices = Array.isArray(saved.usedNightIndices) ? saved.usedNightIndices : [];
+        state.usedFinanceIndices = Array.isArray(saved.usedFinanceIndices) ? saved.usedFinanceIndices : [];
+        if (typeof state.day !== "number") state.day = 1;
+        if (typeof state.workIndex !== "number") state.workIndex = ensureWorkIndex();
+        if (typeof state.health !== "number") state.health = 75;
+        if (typeof state.clean !== "number") state.clean = 65;
+        if (typeof state.monthlySettledMonth !== "number") state.monthlySettledMonth = 0;
+        state.nightMouse = Boolean(saved.nightMouse);
+        if (!state.commute) state.commute = "mid";
+        if (typeof state.lastLifeTag !== "string") state.lastLifeTag = "";
+        if (typeof state.anxietyDayKey !== "string") state.anxietyDayKey = "";
+        if (typeof state.mealDayKey !== "string") state.mealDayKey = "";
+        if (typeof state.weekendIndex !== "number") state.weekendIndex = pickWeekendIndex(state.usedWeekendIndices);
+        if (typeof state.nightIndex !== "number") state.nightIndex = pickNightIndex(state.month, state.usedNightIndices, state.commute, state.health);
+        if (typeof state.financeIndex !== "number") state.financeIndex = pickFinanceIndex(state.usedFinanceIndices);
+        if (saved.mouse && typeof saved.mouse.levelIndex === "number") {
+          state.mouse = {
+            ...saved.mouse,
+            level: mouseLevels[saved.mouse.levelIndex],
+            blocked: new Set(saved.mouse.blocked || []),
+            moving: false
+          };
+        }
+        document.getElementById("menuScreen").classList.add("hidden");
+        document.getElementById("game").classList.remove("hidden");
+        render();
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    function loadSettings() {
+      try {
+        return JSON.parse(storageGet(settingsKey)) || { skipTutorial: false };
+      } catch {
+        return { skipTutorial: false };
+      }
+    }
+
+    function saveSettings() {
+      storageSet(settingsKey, JSON.stringify(settings));
+      document.getElementById("skipTutorialBtn").classList.toggle("on", settings.skipTutorial);
+    }
+
+    function maybeTutorial() {
+      if (settings.skipTutorial) return;
+      tutorialStep = 0;
+      showTutorial();
+    }
+
+    function tutorialSteps() {
+      return [
+        ["你的身份", "你是一个试用期大厂运营鼠鼠，刚搬进城中村出租屋。白天要给公司当牛马，晚上还要照顾自己的房间。"],
+        ["试用期节奏", "Demo 从 9 月入职培训开始，体验 1 个月。每月 28 天，最后一天结束后会发工资并结算房租水电，然后进入结局。"],
+        ["状态", "选择会影响现金、发量、心态、上级评价、同事印象和整洁。白天主要看上级评价，夜晚和周末更容易影响整洁。"],
+        ["隐藏规则", "每天白天开始会扣 25 元日常开销。手头现金如果不够多，鼠鼠会焦虑地掉心态；现金小于 0 会直接进入破产结局。"],
+        ["存档", "游戏会自动保存。你也可以随时点右上角“存档退出”，下次从主界面的“继续存档”回来。"]
+      ];
+    }
+
+    function showTutorial() {
+      const steps = tutorialSteps();
+      const [title, text] = steps[tutorialStep];
+      document.getElementById("tutorialTitle").textContent = title;
+      document.getElementById("tutorialText").textContent = text;
+      document.getElementById("tutorialNextBtn").textContent = tutorialStep >= steps.length - 1 ? "开始" : "下一步";
+      document.getElementById("tutorialModal").classList.remove("hidden");
+    }
+
+    function nextTutorial() {
+      tutorialStep += 1;
+      if (tutorialStep >= tutorialSteps().length) {
+        document.getElementById("tutorialModal").classList.add("hidden");
+        return;
+      }
+      showTutorial();
+    }
+
+    function openSettings() {
+      saveSettings();
+      document.getElementById("settingsModal").classList.remove("hidden");
+    }
+
+    function closeSettings() {
+      document.getElementById("settingsModal").classList.add("hidden");
+    }
+
+    function clearSave() {
+      storageRemove(saveKey);
+      document.getElementById("continueBtn").disabled = true;
+      showToast("本地存档已清除。");
+    }
+
+    function saveAndExit() {
+      saveGame();
+      document.getElementById("game").classList.add("hidden");
+      document.getElementById("menuScreen").classList.remove("hidden");
+      document.getElementById("result").classList.remove("show");
+    }
+
+    function toggleSkipTutorial() {
+      settings.skipTutorial = !settings.skipTutorial;
+      saveSettings();
+    }
+
+    function boot() {
+      document.getElementById("continueBtn").disabled = !storageGet(saveKey);
+      saveSettings();
+    }
+
+    function updateStatsOnly() {
+      document.getElementById("monthText").textContent = dateText();
+      document.getElementById("cashText").textContent = state.cash;
+      document.getElementById("healthText").textContent = state.health;
+      document.getElementById("moodText").textContent = state.mood;
+      document.getElementById("peerText").textContent = state.peer;
+      document.getElementById("cleanText").textContent = state.clean;
+      updateStatEmphasis();
+    }
+
+    function updateStatEmphasis() {
+      const workCard = document.querySelector(".stat-work");
+      const cleanCard = document.querySelector(".stat-clean");
+      const workActive = ["life", "dayWork", "tea", "monthEnd"].includes(state.phase);
+      const cleanActive = ["night", "toNight", "weekend"].includes(state.phase) || state.nightMouse;
+      workCard?.classList.toggle("is-muted", !workActive);
+      cleanCard?.classList.toggle("is-muted", !cleanActive);
+    }
+
+    function setHint(title, text) {
+      document.getElementById("hintTitle").textContent = title;
+      document.getElementById("hintText").textContent = text;
+    }
+
+    function showToast(text) {
+      toast.textContent = text;
+      toast.classList.add("show");
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => toast.classList.remove("show"), 1400);
+    }
+
+    function getDistance(a, b) {
+      return Math.hypot(a.x - b.x, a.y - b.y);
+    }
+
+    function signed(value) {
+      return value > 0 ? `+${value}` : `${value}`;
+    }
+
+    function bindPress(id, handler) {
+      const el = document.getElementById(id);
+      let touched = false;
+      el.addEventListener("touchend", (event) => {
+        event.preventDefault();
+        touched = true;
+        handler(event);
+        setTimeout(() => touched = false, 350);
+      }, { passive: false });
+      el.addEventListener("click", (event) => {
+        if (touched) return;
+        handler(event);
+      });
+    }
+
+    bindPress("saveExitBtn", saveAndExit);
+    bindPress("againBtn", nextStep);
+    bindPress("newGameBtn", resetAllToMenu);
+    bindPress("continueBtn", () => {
+      if (!loadGame()) showToast("没有可用存档。");
+    });
+    bindPress("settingsBtn", openSettings);
+    bindPress("closeSettingsBtn", closeSettings);
+    bindPress("clearSaveBtn", clearSave);
+    bindPress("skipTutorialBtn", toggleSkipTutorial);
+    bindPress("tutorialNextBtn", nextTutorial);
+    window.addEventListener("keydown", (event) => {
+      const map = { ArrowLeft: "left", ArrowRight: "right", ArrowUp: "up", ArrowDown: "down" };
+      if (state.phase !== "night" || currentEvent().type !== "shop" || !map[event.key]) return;
+      event.preventDefault();
+      moveShop(map[event.key]);
+    });
+
+    boot();
+  </script>
+</body>
+</html>
