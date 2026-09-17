@@ -755,6 +755,7 @@
 
 
 
+
 <!-- new-version-style --><style>    .avatar-panel { display:flex; align-items:center; gap:20px; padding:16px 0; position:relative; min-height:124px; }
     .avatar-panel img { width:96px; height:96px; object-fit:contain; border-radius:8px; border:1px solid #697071; background:#f4f4f4; }
     .avatar-vitals { display:grid; gap:12px; }
@@ -784,6 +785,8 @@
     .board:has(.inspection) { height:auto; min-height:450px; }
     .inspection { height:auto; align-content:start; }
     .stats { grid-template-columns:repeat(3,minmax(0,1fr)); }
+    .stat-date .value { white-space:pre; text-wrap:nowrap; line-height:1.35; }
+    @media(max-width:360px) { .stat-date .value { font-size:15px; } }
     .game { grid-template-rows:auto auto auto 1fr; }
     @media(max-width:480px) { .avatar-panel { gap:12px; } .avatar-panel img { width:80px; height:80px; } .vital-line { gap:7px; font-size:13px; } .hearts { font-size:19px; } }
     @media(prefers-reduced-motion:reduce) { .gain { animation:none; } }
@@ -3957,7 +3960,7 @@
     }
 
     function dateText() {
-      return `${currentMonth().label}\n${state.day}日\n${weekdayText()}`;
+      return `${currentMonth().label}\u00a0${state.day}日\n${weekdayText()}`;
     }
 
     function showBankruptcyResult() {
@@ -4556,6 +4559,7 @@
         handler(event);
       });
     }
+
 
 
 
