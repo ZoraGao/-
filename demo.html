@@ -896,6 +896,15 @@
 
 
 
+
+
+
+
+
+
+
+
+
 <!-- demo-v2-ui --><style>    .board:has(.mini-scene) { height:auto; min-height:450px; }
     .mini-scene { height:auto; align-content:start; padding:18px; }
     .mini-scene h2 { font-size:21px; margin:0; }
@@ -914,6 +923,73 @@
     .achievement-sheet h2 { font-size:22px; line-height:1.4; }
     .achievement-sheet p { line-height:1.7; }
     #demoAchievementCount { color:#a8b3b5; margin:12px 0; }
+    .meal-adjustment { font-size:12px; white-space:normal; width:100%; right:0; left:auto; text-align:center; }
+    .food-spot[aria-disabled="true"] { opacity:.55; cursor:default; }
+    .rice-shelf { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; padding:38px 12px 30px; background:#d2e4de; border-top:12px solid #9ebdb8; border-bottom:14px solid #9ebdb8; position:relative; min-height:288px; }
+    .rice-pack { position:relative; height:208px; min-width:0; background:#f5faf6; border:2px solid #a8bbb5; border-radius:5px 5px 16px 16px; box-shadow:0 8px 0 #789b8d40; }
+    .rice-pack .food-piece { inset:25% 8% 32%; background:#f3dfb4; }
+    .rice-number { position:absolute; top:-29px; left:0; width:100%; color:#263e37; font-size:14px; font-weight:700; text-align:center; }
+    .rice-sale { position:absolute; top:52px; left:4px; padding:2px 3px; background:#f3c75b; color:#403211; font-size:11px; transform:rotate(-8deg); }
+    .rice-seal { position:absolute; top:3px; left:0; width:100%; height:44px; border:0; border-radius:0; background:transparent; padding:8px 4px; box-shadow:none; }
+    .rice-seal:before { content:''; display:block; height:12px; border-top:3px double #8a9e96; border-bottom:2px solid #a7b8b1; background:#d9e7df; }
+    .rice-seal.torn-seal:before { clip-path:polygon(0 0,55% 0,57% 70%,66% 8%,74% 0,100% 0,100% 100%,66% 100%,57% 78%,52% 100%,0 100%); background:#899b90; transform:rotate(-9deg); box-shadow:0 4px 0 #435f51; }
+    .rice-date { position:absolute; bottom:10px; left:4%; width:92%; min-height:48px; border:1px solid #aab9b2; border-radius:2px; padding:3px 1px; background:#fff; color:#253d33; font-size:12px; line-height:1.5; white-space:pre-line; box-shadow:none; }
+    .rice-seal.checked,.rice-date.checked { outline:2px solid #518676; outline-offset:-2px; }
+    .rice-purchases { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+    .rice-purchases .choice { min-width:0; padding:10px 4px; font-size:14px; }
+    @media(max-width:380px) { .rice-shelf { gap:6px; padding-left:6px; padding-right:6px; } .rice-selection { padding:12px; } }
+    .pixel-rice { background:#213f3c; color:#f1f5db; font-family:ui-monospace,'Courier New',monospace; border-top:4px solid #b5dccc; }
+    .pixel-rice h2 { font-size:20px; }
+    .pixel-rice .pr-status { color:#e7cd76; font-size:13px; }
+    .pr-scene { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; padding:40px 12px 20px; background:#608d85; border-top:8px solid #9ac1b4; border-bottom:12px solid #a7c6b3; position:relative; touch-action:none; user-select:none; cursor:crosshair; overflow:hidden; }
+    .pr-pack { height:260px; position:relative; min-width:0; background:#e8efdb; outline:3px solid #365f56; }
+    .pr-label { position:absolute; top:-30px; left:-6px; right:-6px; text-align:center; color:#f8f7df; font-size:14px; white-space:nowrap; }
+    .pr-details { position:absolute; inset:0; }
+    .pr-seal { position:absolute; left:8%; right:8%; top:14px; height:18px; background:#a9c1a9; border-top:6px double #35594c; border-bottom:4px solid #647f68; }
+    .pr-seal.pr-torn { background:#314e41; clip-path:polygon(0 0,50% 0,50% 55%,60% 55%,60% 22%,70% 22%,70% 0,100% 0,100% 100%,60% 100%,60% 78%,50% 78%,50% 100%,0 100%); transform:rotate(-8deg); }
+    .pr-expiry { position:absolute; bottom:12px; left:4%; width:92%; padding:4px 0; text-align:center; color:#2b493e; background:#fffbe3; border:2px solid #7c9984; font-size:12px; line-height:1.5; }
+    .pr-rice { position:absolute; top:74px; left:0; width:100%; height:104px; object-fit:contain; image-rendering:pixelated; pointer-events:none; }
+    .pr-mask { position:absolute; inset:0; display:grid; grid-template-columns:repeat(10,minmax(0,1fr)); grid-template-rows:repeat(26,minmax(0,1fr)); pointer-events:none; }
+    .pr-tile { min-width:0; min-height:0; }
+    .pr-chip { position:absolute; width:6px; height:6px; background:#e4efc3; box-shadow:3px 3px 0 #6ea799; pointer-events:none; animation:pr-scatter .4s steps(4,end) forwards; z-index:3; }
+    @keyframes pr-scatter { to { transform:translate(var(--dx),var(--dy)); opacity:0; } }
+    .pr-cursor { position:absolute; width:22px; height:22px; border:2px dashed #fcf4b5; pointer-events:none; transform:translate(-50%,-50%); opacity:0; }
+    .pr-scene:focus-visible .pr-cursor { opacity:1; }
+    .pr-purchases { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+    .pixel-rice .choice { border:2px solid #102f2e; border-radius:0; box-shadow:3px 3px 0 #122e2c; background:#c2d8ac; color:#203b32; font-family:inherit; font-size:14px; padding:10px 4px; min-width:0; }
+    .pixel-rice .pr-leave { background:#94b5ad; }
+    .pixel-rice .food-feedback { font-size:13px; min-height:42px; }
+    @media(max-width:380px) { .pr-scene { gap:8px; padding-left:8px; padding-right:8px; } .pixel-rice { padding:12px; } .pr-label { font-size:13px; } .pr-purchases { gap:6px; } .pixel-rice .choice { font-size:13px; } }
+    @media(prefers-reduced-motion:reduce) { .pr-chip { display:none; } }
+    .pixel-arcade { background:#24423f; color:#f1f5db; border-top:4px solid #b5dccc; font-family:ui-monospace,'Courier New',monospace; }
+    .pixel-arcade .scene-card { border:2px solid #9abda9; border-radius:0; background:#314f49; box-shadow:4px 4px 0 #142e2b; }
+    .pixel-arcade .choice,.pixel-arcade .mini-controls button,.pixel-arcade .again { position:relative; border:2px solid #102f2e; border-radius:0; box-shadow:3px 3px 0 #122e2c; background:#c2d8ac; color:#203b32; font-family:inherit; }
+    .pixel-arcade button:focus-visible { outline:3px solid #f1d581; outline-offset:3px; }
+    .pixel-arcade .catch-field { border:4px solid #97bdaa; border-radius:0; background:#b6d6c9; box-shadow:inset 0 -28px 0 #779e89; }
+    .pixel-arcade .catch-field:before { content:''; position:absolute; left:8%; right:8%; top:10%; height:6px; background:#ecedc7; box-shadow:0 7px 0 #78a59b; }
+    .pixel-arcade .catch-ball { width:24px; height:24px; border:0; border-radius:0; background:#e49895; box-shadow:inset 4px 4px 0 #f3c9a9,inset -4px -4px 0 #aa677a; clip-path:polygon(25% 0,75% 0,75% 12%,88% 12%,88% 25%,100% 25%,100% 75%,88% 75%,88% 88%,75% 88%,75% 100%,25% 100%,25% 88%,12% 88%,12% 75%,0 75%,0 25%,12% 25%,12% 12%,25% 12%); }
+    .pixel-arcade .catch-plate { border-radius:0; height:14px; border:0; background:#466e71; box-shadow:inset 0 4px 0 #edf0c4,0 4px 0 #274d53; }
+    .pixel-arcade .kpi-grid { border:4px solid #8fb6a3; border-radius:0; background:#36574d; gap:8px; }
+    .pixel-arcade .kpi-cell { border-radius:0; font-family:inherit; box-shadow:inset 3px 3px 0 #ffffff40,inset -3px -3px 0 #203d3a35; color:#213d35; }
+    .pixel-arcade .kpi-cell[data-level="0"] { background:#668e7c; box-shadow:inset 3px 3px 0 #203d3a35; }
+    .arcade-blame .choices .choice { padding-left:76px; min-height:76px; }
+    .arcade-blame .choices .choice:before { content:''; position:absolute; width:48px; height:48px; left:12px; top:50%; transform:translateY(-50%); background:var(--arcade-person-0) center/contain no-repeat; image-rendering:pixelated; }
+    .arcade-blame .choices .choice:nth-child(2):before { background-image:var(--arcade-person-1); }
+    .arcade-blame .choices .choice:nth-child(3):before { background-image:var(--arcade-person-2); }
+    .arcade-mouse { background-color:#789b89; background-image:repeating-linear-gradient(0deg,transparent 0 47px,#527968 47px 50px),repeating-linear-gradient(90deg,transparent 0 47px,#527968 47px 50px); }
+    .arcade-mouse .hole { border:4px solid #b5c7a1; border-radius:0; background:#233d36; box-shadow:inset 4px 4px 0 #102b29,4px 4px 0 #476e5b; clip-path:polygon(15% 0,85% 0,85% 8%,100% 8%,100% 92%,85% 92%,85% 100%,15% 100%,15% 92%,0 92%,0 8%,15% 8%); }
+    .arcade-mouse .hole:before { bottom:4px; color:#e1edc5; font-family:inherit; font-size:11px; }
+    .arcade-mouse .hole.exit { background:#c9dc94; border-color:#eff4c5; }
+    .arcade-mouse .hole.exit:after { color:#284c3b; }
+    .arcade-mouse .hole.exit:before { content:none; }
+    .arcade-mouse .hole.blocked { background:#8a9ca2; border-color:#c3d0be; box-shadow:inset -6px -6px 0 #526e73,4px 4px 0 #476e5b; }
+    .arcade-mouse .hole.blocked:after { border-radius:0; transform:none; background:#d9dfc6; inset:8px 20px 32px 8px; }
+    .arcade-mouse .crawler .mouse { display:none; }
+    .arcade-mouse .crawler:after { content:''; display:block; width:76px; height:50px; background:var(--arcade-mouse) center/contain no-repeat; image-rendering:pixelated; }
+    .arcade-mouse .crawler.moving:after { animation:pixel-mouse-run .22s steps(2,end) infinite alternate; }
+    .pixel-arcade .result .card { border-radius:0; border:3px solid #a3c7b3; background:#294b44; }
+    @keyframes pixel-mouse-run { to { transform:translateY(-4px); } }
+    @media(prefers-reduced-motion:reduce) { .arcade-mouse .crawler.moving:after { animation:none; } }
 </style>
 <section class="modal hidden" id="demoAchievementModal" role="dialog" aria-modal="true" aria-labelledby="demoAchievementTitle"><div class="modal-card achievement-sheet"><div class="achievement-icon" id="demoAchievementIcon"></div><h2 id="demoAchievementTitle"></h2><p id="demoAchievementCopy"></p><div id="demoAchievementCount"></div><button class="menu-btn primary-action" id="demoAchievementNext">下一项</button></div></section><!-- end-demo-v2-ui -->
 <script>
@@ -6302,6 +6378,15 @@
 
 
 
+
+
+
+
+
+
+
+
+
 // demo-v2-start
 const demoRules={"initialCash":4000,"dailyCost":40,"dailyClean":2,"rent":3000,"utilities":320,"anxietyCash":2500,"anxietyMood":1,"sportHealth":45,"sportCooldown":7,"forcedClean":20,"lifeChance":0.55};
 const demoSalaries=[{"min":0,"pay":7200},{"min":40,"pay":7600},{"min":60,"pay":8000},{"min":75,"pay":8400},{"min":90,"pay":8800}];
@@ -6335,7 +6420,7 @@ specialEvents.splice(0,specialEvents.length,...demoSpecials.map(e=>({...e,eligib
       if (previousWork < 90 && state.work >= 90 && !demoState().kpiSeen) {
         demoState().kpiSeen = true; demoState().kpiPending = true;
       }
-      extras().emotion = moodEmotion(mood);
+      extras().emotion = extras().nextEmotion || moodEmotion(mood);
       demoState().lastDelta = [state.work-previous.work,state.mood-previous.mood,cash,state.peer-previous.peer,state.health-previous.health,state.clean-previous.clean];
       updateStatsOnly();
       return peer;
@@ -6654,6 +6739,289 @@ specialEvents.splice(0,specialEvents.length,...demoSpecials.map(e=>({...e,eligib
       if(a.type==='kpi' && dirs[event.key]){event.preventDefault();moveKpi(dirs[event.key]);}
       if(a.type==='sport' && ['ArrowLeft','ArrowRight'].includes(event.key)){event.preventDefault();a.plate=clamp(a.plate+(event.key==='ArrowLeft'?-.1:.1),.1,.9);}
     });
+
+    moodEmotion=function(delta){
+      if(delta>=4)return '非常开心';
+      if(delta>=2)return '很得意';
+      if(delta>0)return '不错';
+      if(delta<=-4)return '哭';
+      if(delta<=-3)return '很生气';
+      if(delta<=-2)return '有些愤怒';
+      return delta<0?'略有不满':'日常状态';
+    };
+    function choiceEmotion(choice){
+      const [text,,mood=0]=choice;
+      if(mood>0 && /吃|鸡煲|糖水|奶茶|蛋糕|火锅|柠檬茶/.test(text))return '流口水';
+      return moodEmotion(mood);
+    }
+    renderChoiceScene=function(body,choices,onPick){
+      const adjusted=balancedChoices(choices);
+      baseChoiceScene(body,adjusted,(text,...delta)=>{
+        const selected=adjusted.find(c=>c[0]===text);
+        extras().nextEmotion=selected?choiceEmotion(selected):null;
+        try{onPick(text,...delta);}finally{delete extras().nextEmotion;}
+      });
+      board.querySelectorAll('.day-scene:last-child .choices .choice').forEach((button,i)=>{
+        const preview=()=>showAvatar(choiceEmotion(adjusted[i]));
+        const restore=()=>showAvatar(extras().emotion);
+        button.addEventListener('pointerenter',preview);button.addEventListener('focus',preview);
+        button.addEventListener('pointerleave',restore);button.addEventListener('blur',restore);
+      });
+    };
+    const feedbackEvent=renderDemoEvent;
+    renderDemoEvent=function(group,index){
+      if(group[index]?.flag==='bikeAccident')extras().emotion='大吃一惊';
+      else if(state.health<25 || state.cash<500)extras().emotion='大事不妙';
+      else if(state.mood<35)extras().emotion='哭';
+      else if(state.health<45 || state.clean<20)extras().emotion='小事不妙';
+      feedbackEvent(group,index);
+    };
+    const feedbackExtra=renderExtra;
+    renderExtra=function(){
+      const a=extras().active;
+      if(a?.offer && a.type==='kpi')extras().emotion='大吃一惊';
+      if(a?.offer && a.type==='sport')extras().emotion=state.health<25?'大事不妙':'小事不妙';
+      if(a?.offer && a.type==='food')extras().emotion='流口水';
+      feedbackExtra();
+    };
+    const feedbackBankruptcy=showBankruptcyResult;
+    showBankruptcyResult=function(){extras().emotion='大事不妙';feedbackBankruptcy();};
+    const feedbackFloatGain=floatGain;
+    floatGain=function(kind,value){
+      if(kind!=='cash' || !demoState().adjustingMeal)return feedbackFloatGain(kind,value);
+      if(!value)return;
+      const target=document.getElementById('cashText')?.parentElement;
+      if(!target)return;
+      const item=document.createElement('span');item.className='gain gain-cash meal-adjustment';
+      item.textContent=`餐费调整 ${signed(value)}`;item.setAttribute('aria-hidden','true');
+      target.appendChild(item);setTimeout(()=>item.remove(),2400);
+    };
+
+    function prepareRice(a){
+      if(a.riceVersion===1)return;
+      a.riceVersion=1;a.rice=['intact','open','expired'];
+      for(let i=2;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a.rice[i],a.rice[j]]=[a.rice[j],a.rice[i]];}
+      a.inspected=[];a.tries=0;a.settled=false;a.feedback='冷藏柜里剩下三份打折饭团，你拿不准该选哪一份。';
+      saveGame();
+    }
+    function riceDetails(kind){
+      if(kind==='open')return '封口已经翘起，包装不再密封；食用期限是今天。';
+      if(kind==='expired')return '包装密封，但标签上的食用期限是昨天，已经过期。';
+      return '包装密封完整，没有破损或异常斑点；还在食用期限内。';
+    }
+    function checkFoodSpot(a,index=null,part='all'){
+      if(extras().active!==a||a.settled)return;
+      prepareRice(a);
+      a.riceChecks ||= [];
+      const key=`${index}:${part}`;
+      if(a.tries>=5 || index!==null && (a.inspected.includes(index)||a.riceChecks.includes(key)))return;
+      a.tries++;
+      if(index===null){a.feedback='没看清饭团的情况，这次检查机会用掉了。';extras().emotion='小事不妙';}
+      else {
+        a.riceChecks.push(key);
+        if(part==='all'||['seal','date'].every(p=>a.riceChecks.includes(`${index}:${p}`)))a.inspected.push(index);
+        const kind=a.rice[index];
+        const detail=part==='seal'?(kind==='open'?'封口翘起，包装已经开了。':'封口完整，没有破损。'):part==='date'?(kind==='expired'?'食用期限是昨天，已经过期。':'食用期限是今天，还没有过期。'):riceDetails(kind);
+        a.feedback=`${index+1} 号饭团：${detail}`;extras().emotion=kind==='intact'?'不错':'小吃一惊';
+      }
+      saveGame();renderExtra();
+    };
+    function buyRice(a,index){
+      if(extras().active!==a||a.settled)return;
+      prepareRice(a);a.settled=true;
+      const key=`${state.month}-${state.day}`;
+      if(a.rice[index]==='intact'){
+        if(state.mealDayKey===key && demoState().mealDiscountDay!==key){
+          demoState().mealDiscountDay=key;demoState().mealPrice=demoRules.dailyCost-20;
+          demoState().adjustingMeal=true;
+          try{applyDelta(0,2,20);}finally{delete demoState().adjustingMeal;}
+          extras().emotion='很得意';
+          finishExtra('今日餐费减20');
+        }else finishExtra('今天的餐费优惠已经记过账了，这次不重复抵扣。');
+      }else{
+        extras().emotion='小事不妙';
+        finishExtra(`${a.rice[index]==='open'?'这份饭团的包装破了。':'这份饭团已经过期了。'}你把它放回去，还是点了原本打算吃的外卖。今日餐费不变。`);
+      }
+    }
+    const riceRenderExtra=renderExtra;
+    renderExtra=function(){
+      const a=extras().active;
+      if(a?.type==='receipt'){
+        if(a.message?.includes('你没有购买，还是按原来的预算安排今天的饭。')){
+          a.message=`${a.message.includes('封口')?'这份饭团的包装破了。':'这份饭团已经过期了。'}你把它放回去，还是点了原本打算吃的外卖。今日餐费不变。`;saveGame();
+        }
+        const oldPrice=a.message?.match(/今日餐费从 40 元调整为 (8|12|18) 元/);
+        if(oldPrice){
+          // Migrate only this pending receipt; never recalculate completed days.
+          applyDelta(0,0,Number(oldPrice[1])-20);
+          demoState().mealPrice=20;demoState().mealDiscountDay=`${state.month}-${state.day}`;
+          a.message='今日餐费减20';saveGame();
+        }else if(a.message?.startsWith('你花 5 元买下了包装完好、还在保质期内的饭团')){
+          a.message='今日餐费减20';saveGame();
+        }
+      }
+      if(a?.type==='food'&&a.offer){
+        clearBoard();state.done=false;document.getElementById('result').classList.remove('show');
+        document.getElementById('eventTitle').textContent=dateText();document.getElementById('modeText').textContent='便利店';
+        extras().emotion='流口水';updateStatsOnly();
+        renderChoiceScene('你原本打算花 25 元点外卖，听说附近便利店有 5 元的打折饭团，便赶过去想省点饭钱。冷藏柜里还剩三份，买之前得先看看包装和食用期限。', [['挑一份打折饭团',0,0,0],['这次不买，按原计划吃饭',0,0,0]],text=>{
+          if(extras().active!==a)return;
+          if(text==='这次不买，按原计划吃饭')return endExtra('今天仍按原来的预算吃饭。');
+          a.offer=false;prepareRice(a);saveGame();renderExtra();
+        });return;
+      }
+      riceRenderExtra();
+    };
+    renderFoodInspection=function(a){
+      prepareRice(a);
+      const wrap=document.createElement('div');wrap.className='day-scene inspection rice-selection';
+      const title=document.createElement('h2');title.textContent='冷藏柜里的打折饭团';wrap.appendChild(title);
+      const counter=document.createElement('p');counter.textContent=`剩余检查机会：${Math.max(0,5-a.tries)} 次`;wrap.appendChild(counter);
+      const shelf=document.createElement('div');shelf.className='rice-shelf';shelf.setAttribute('role','group');shelf.setAttribute('aria-label','同一个冷藏柜里的三份打折饭团');shelf.onclick=()=>checkFoodSpot(a);
+      const purchases=document.createElement('div');purchases.className='rice-purchases';
+      a.rice.forEach((kind,i)=>{
+        const pack=document.createElement('div');pack.className='rice-pack rice';
+        pack.innerHTML=`<span class="rice-number">${i+1} 号</span><span class="food-piece"></span><span class="rice-sale">特价 5 元</span>`;
+        for(const part of ['seal','date']){
+          const spot=document.createElement('button');spot.className=`rice-${part}`;
+          if(part==='seal'&&kind==='open')spot.className+=' torn-seal';
+          const date=kind==='expired'?(state.day>1?`${currentMonth().label}${state.day-1}日`:'8月28日'):`${currentMonth().label}${state.day}日`;
+          spot.textContent=part==='date'?`食用期限\n${date}`:'';
+          spot.title=`检查${i+1}号饭团的${part==='seal'?'封口':'日期'}`;spot.setAttribute('aria-label',spot.title);
+          const checked=a.inspected.includes(i)||a.riceChecks?.includes(`${i}:${part}`);
+          if(checked)spot.classList.add('checked');spot.setAttribute('aria-disabled',String(checked||a.tries>=5));
+          spot.onclick=event=>{event.stopPropagation();checkFoodSpot(a,i,part);};pack.appendChild(spot);
+        }
+        shelf.appendChild(pack);
+        const buy=document.createElement('button');buy.className='choice';buy.textContent=`买 ${i+1} 号`;buy.onclick=()=>buyRice(a,i);purchases.appendChild(buy);
+      });
+      wrap.appendChild(shelf);
+      const feedback=document.createElement('p');feedback.className='food-feedback';feedback.setAttribute('aria-live','polite');feedback.textContent=a.feedback;wrap.appendChild(feedback);wrap.appendChild(purchases);
+      const leave=document.createElement('button');leave.className='choice';leave.textContent='不买了，按原计划吃饭';leave.onclick=()=>{if(extras().active===a)endExtra('今天仍按原来的预算吃饭。');};wrap.appendChild(leave);board.appendChild(wrap);
+    };
+
+    const riceFlavors=['三文鱼','鳗鱼','金枪鱼'];
+    function ricePixelArt(flavor){
+      const outline='#304941',rice='#fff7d9',shadow='#dcdba8';
+      const body=flavor===0?'M28 8h8v4h4v8h8v8h4v8h4v16h-4v4H12v-4H8V36h4v-8h4v-8h8v-8h4z':flavor===1?'M16 12h32v4h8v36h-8v4H16v-4H8V16h8z':'M24 8h16v4h12v8h4v28h-4v8H12v-8H8V20h4v-8h12z';
+      const topping=flavor===0?'<path fill="#ec857c" d="M24 16h16v4h8v12H16V20h8z"/><path fill="#ffd6ad" d="M24 16h4v8h4v8h-4v-8h-4zm12 0h4v8h4v8h-4v-8h-4z"/>':flavor===1?'<path fill="#975b50" d="M12 16h40v16H12z"/><path fill="#e3ad6a" d="M16 16h4v16h-4zm12 0h4v16h-4zm12 0h4v16h-4z"/><path fill="#627e47" d="M28 12h8v8h-8z"/>':'<path fill="#cd7e96" d="M24 16h16v4h8v12H16V20h8z"/><path fill="#f4b7c4" d="M24 20h8v4h-8zm12 4h8v4h-8z"/>';
+      return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" shape-rendering="crispEdges"><path fill="${outline}" d="${body}"/><path fill="${rice}" d="M24 16h16v8h8v8h4v16h-8v4H20v-4h-8V32h4v-8h8z"/><path fill="${shadow}" d="M12 44h8v4h24v-4h8v4h-8v4H20v-4h-8z"/>${topping}<path fill="#3b6357" d="M24 48h16v8H24z"/><path fill="${outline}" d="M20 34h4v6h-4zm20 0h4v6h-4zM28 43h2v2h8v-2h2v4H28z"/><path fill="#eba19b" d="M16 41h8v3h-8zm24 0h8v3h-8z"/><path fill="#fff" d="M20 34h2v2h-2zm20 0h2v2h-2z"/></svg>`;
+    }
+    const preparePlainRice=prepareRice;
+    prepareRice=function(a){
+      preparePlainRice(a);
+      if(!a.scratch){
+        a.scratch=Array.from({length:3},(_,i)=>Array.from({length:260},(_,n)=>{
+          const row=Math.floor(n/10),col=n%10;
+          if(row>=7&&row<=17&&col>=1&&col<=8)return 0;
+          if(a.inspected?.includes(i))return 0;
+          if(a.riceChecks?.includes(`${i}:seal`)&&row<7)return 0;
+          if(a.riceChecks?.includes(`${i}:date`)&&row>=18)return 0;
+          return 1;
+        }));
+        a.scratchNoticed=[];saveGame();
+      }
+    };
+    function scratchRiceAt(a,index,x,y){
+      if(extras().active!==a||a.settled||index<0||index>2||!Number.isFinite(x)||!Number.isFinite(y))return [];
+      prepareRice(a);
+      const cx=Math.floor(x*10),cy=Math.floor(y*26),changed=[];
+      for(let row=cy-1;row<=cy+1;row++)for(let col=cx-1;col<=cx+1;col++){
+        if(row<0||row>=26||col<0||col>=10)continue;
+        const n=row*10+col;if(a.scratch[index][n]){a.scratch[index][n]=0;changed.push(n);}
+      }
+      const hidden=a.scratch[index].reduce((s,v)=>s+v,0);
+      if(hidden<=18&&!a.scratchNoticed.includes(index)){
+        a.scratchNoticed.push(index);a.feedback=`${riceFlavors[index]}饭团：${riceDetails(a.rice[index])}`;
+        extras().emotion=a.rice[index]==='intact'?'不错':'小吃一惊';showAvatar(extras().emotion);
+      }
+      return changed;
+    }
+    renderFoodInspection=function(a){
+      prepareRice(a);
+      const wrap=document.createElement('div');wrap.className='day-scene inspection rice-selection pixel-rice';
+      const heading=document.createElement('h2');heading.textContent='便利店 · 饭团特价';wrap.appendChild(heading);
+      const info=document.createElement('p');info.className='pr-status';wrap.appendChild(info);
+      const shelf=document.createElement('div');shelf.className='pr-scene';shelf.tabIndex=0;
+      shelf.setAttribute('role','group');shelf.setAttribute('aria-label','三份像素饭团。按住鼠标或手指擦开包装遮罩；也可用方向键移动光标，按空格擦除。');
+      const packs=[],cells=[];
+      a.rice.forEach((kind,i)=>{
+        const pack=document.createElement('div');pack.className='pr-pack';
+        const label=document.createElement('div');label.className='pr-label';label.textContent=riceFlavors[i];pack.appendChild(label);
+        const details=document.createElement('div');details.className='pr-details';details.setAttribute('aria-hidden','true');
+        const expiry=kind==='expired'?(state.day>1?`${currentMonth().label}${state.day-1}日`:'8月28日'):`${currentMonth().label}${state.day}日`;
+        details.innerHTML=`<div class="pr-seal${kind==='open'?' pr-torn':''}"></div><div class="pr-expiry">食用期限<br>${expiry}</div>`;pack.appendChild(details);
+        const art=document.createElement('img');art.className='pr-rice';art.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(ricePixelArt(i));art.alt=`可爱的${riceFlavors[i]}饭团`;art.draggable=false;pack.appendChild(art);
+        const mask=document.createElement('div');mask.className='pr-mask';mask.setAttribute('aria-hidden','true');
+        cells[i]=a.scratch[i].map((covered,n)=>{const tile=document.createElement('span');tile.className='pr-tile';tile.style.background=['#94b9b2','#a7cac1','#bfdbce','#82a8a2'][(n*7+i*3)%4];tile.style.opacity=covered?'1':'0';mask.appendChild(tile);return tile;});
+        pack.appendChild(mask);shelf.appendChild(pack);packs.push(pack);
+      });
+      const cursor=document.createElement('span');cursor.className='pr-cursor';cursor.setAttribute('aria-hidden','true');shelf.appendChild(cursor);
+      wrap.appendChild(shelf);
+      const feedback=document.createElement('p');feedback.className='food-feedback';feedback.setAttribute('aria-live','polite');wrap.appendChild(feedback);
+      const update=()=>{const left=a.scratch.flat().reduce((s,v)=>s+v,0);info.textContent=`特价 5 元 / 份 · 已擦开 ${Math.round((516-left)/516*100)}%`;feedback.textContent=a.feedback;};
+      function particles(pack,changed){
+        if(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)return;
+        changed.slice(0,4).forEach((n,j)=>{
+          const bit=document.createElement('span');bit.className='pr-chip';bit.style.left=`${(n%10)*10}%`;bit.style.top=`${Math.floor(n/10)/26*100}%`;
+          bit.style.setProperty('--dx',`${(j%2?-1:1)*(8+j*4)}px`);bit.style.setProperty('--dy',`${-12-j*4}px`);pack.appendChild(bit);setTimeout(()=>bit.remove(),400);
+        });
+      }
+      function erase(x,y){
+        let changedAny=false;
+        packs.forEach((pack,i)=>{const r=pack.getBoundingClientRect();if(x<r.left||x>r.right||y<r.top||y>r.bottom)return;
+          const changed=scratchRiceAt(a,i,(x-r.left)/r.width,(y-r.top)/r.height);
+          changed.forEach(n=>cells[i][n].style.opacity='0');if(changed.length){particles(pack,changed);changedAny=true;}
+        });
+        const r=shelf.getBoundingClientRect();cursor.style.left=`${x-r.left}px`;cursor.style.top=`${y-r.top}px`;
+        if(changedAny){update();saveGame();}
+      }
+      let held=null,last=null;
+      shelf.onpointerdown=e=>{if(e.button!==0&&e.pointerType!=='touch')return;if(held!==null)return;e.preventDefault();held=e.pointerId;last=[e.clientX,e.clientY];shelf.setPointerCapture?.(e.pointerId);erase(...last);};
+      shelf.onpointermove=e=>{
+        if(e.pointerId!==held)return;e.preventDefault();
+        if(e.pointerType==='mouse'&&e.buttons===0){held=null;last=null;return;}
+        const steps=Math.min(120,Math.max(1,Math.ceil(Math.hypot(e.clientX-last[0],e.clientY-last[1])/5)));
+        for(let j=1;j<=steps;j++)erase(last[0]+(e.clientX-last[0])*j/steps,last[1]+(e.clientY-last[1])*j/steps);
+        last=[e.clientX,e.clientY];
+      };
+      const release=e=>{if(e.pointerId!==held)return;held=null;last=null;saveGame();};
+      shelf.onpointerup=release;shelf.onpointercancel=release;shelf.onlostpointercapture=release;
+      let keyboard=[.12,.12];
+      shelf.onkeydown=e=>{const directions={ArrowLeft:[-.035,0],ArrowRight:[.035,0],ArrowUp:[0,-.04],ArrowDown:[0,.04]};
+        if(!directions[e.key]&&e.key!==' ')return;e.preventDefault();const d=directions[e.key]||[0,0];keyboard=[clamp(keyboard[0]+d[0],0,1),clamp(keyboard[1]+d[1],0,1)];
+        const r=shelf.getBoundingClientRect();cursor.style.left=`${keyboard[0]*r.width}px`;cursor.style.top=`${keyboard[1]*r.height}px`;if(e.key===' ')erase(r.left+keyboard[0]*r.width,r.top+keyboard[1]*r.height);
+      };
+      const purchases=document.createElement('div');purchases.className='pr-purchases';
+      riceFlavors.forEach((name,i)=>{const button=document.createElement('button');button.className='choice';button.textContent=`选${name}`;button.onclick=()=>buyRice(a,i);purchases.appendChild(button);});wrap.appendChild(purchases);
+      const leave=document.createElement('button');leave.className='choice pr-leave';leave.textContent='不买了';leave.onclick=()=>{if(extras().active===a)endExtra('今天还是点原本打算吃的外卖。');};wrap.appendChild(leave);
+      update();board.appendChild(wrap);
+    };
+
+    function arcadeSprite(kind,index=0){
+      const start='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" shape-rendering="crispEdges">';
+      if(kind==='mouse')return start+'<path fill="#dfaaa8" d="M2 22h8v2H4v4H0v-2h2z"/><path fill="#3b5051" d="M10 12h4V6h8v4h4v4h4v10h-6v4H12v-4H8V14h2z"/><path fill="#acbfc0" d="M12 14h12v2h4v6h-6v4H12v-4h-2v-6h2z"/><path fill="#d0dbce" d="M14 8h6v6h-6z"/><path fill="#dfa8b5" d="M16 10h4v4h-4zM22 20h4v2h-4z"/><path fill="#182f32" d="M24 16h2v4h-2zM28 20h4v2h-4zM12 26h4v4h-4zM22 26h4v4h-4z"/><path fill="#fff" d="M24 16h2v2h-2z"/></svg>';
+      const hair=['#544c58','#435f5b','#84644f'][index],shirt=['#94c9b0','#e1acb8','#e7c77a'][index];
+      return start+`<path fill="#203d3a" d="M8 4h16v4h4v16h-4v4H8v-4H4V8h4z"/><path fill="#f0d4b2" d="M8 10h16v12h-4v4h-8v-4H8z"/><path fill="${hair}" d="M8 4h16v4h4v6h-8V10H8v6H4V8h4z"/><path fill="#263f39" d="M10 16h3v3h-3zm9 0h3v3h-3zM14 22h5v2h-5z"/><path fill="${shirt}" d="M8 26h16v6H8z"/></svg>`;
+    }
+    function setArcadeTheme(type){
+      board.classList.add('pixel-arcade',`arcade-${type}`);
+      board.style.setProperty('--arcade-mouse',`url("data:image/svg+xml,${encodeURIComponent(arcadeSprite('mouse'))}")`);
+      for(let i=0;i<3;i++)board.style.setProperty(`--arcade-person-${i}`,`url("data:image/svg+xml,${encodeURIComponent(arcadeSprite('person',i))}")`);
+    }
+    const plainClearBoard=clearBoard;
+    clearBoard=function(){board.classList.remove('pixel-arcade','arcade-mouse','arcade-sport','arcade-kpi','arcade-blame');plainClearBoard();};
+    const plainArcadeExtra=renderExtra;
+    renderExtra=function(){const a=extras().active,type=a?.arcadeTheme||a?.type;plainArcadeExtra();if(['mouse','sport','kpi','blame'].includes(type))setArcadeTheme(type);};
+    const plainArcadeMouse=renderMouse;
+    renderMouse=function(...args){plainArcadeMouse(...args);setArcadeTheme('mouse');};
+    const plainArcadeReceipt=finishExtra;
+    finishExtra=function(message){
+      const type=extras().active?.type;plainArcadeReceipt(message);
+      if(extras().active?.type==='receipt'&&['mouse','sport','kpi','blame'].includes(type)){
+        extras().active.arcadeTheme=type;setArcadeTheme(type);saveGame();
+      }
+    };
 
 // demo-v2-end
     bindPress("saveExitBtn", saveAndExit);
