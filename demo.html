@@ -918,6 +918,11 @@
 
 
 
+
+
+
+
+
 <!-- demo-v2-ui --><style>    .board:has(.mini-scene) { height:auto; min-height:450px; }
     .mini-scene { height:auto; align-content:start; padding:18px; }
     .mini-scene h2 { font-size:21px; margin:0; }
@@ -1047,6 +1052,14 @@ button{touch-action:manipulation;letter-spacing:0}button:focus-visible{outline:3
 @media(max-width:350px){.stat-date .value{font-size:13px}.hearts{font-size:15px}.avatar-panel{gap:10px}.topbar h1{font-size:16px}.vital-line{gap:4px}}
 @media(prefers-reduced-motion:reduce){button{transition:none!important}}
 /* Lift the meme photographs without changing the original image assets. */
+.kpi-rules{font-size:13px;line-height:1.7}.kpi-rules p{margin:10px 0}.kpi-rules table{width:100%;border-collapse:collapse;margin:10px 0;font-variant-numeric:tabular-nums}.kpi-rules th,.kpi-rules td{padding:5px 8px;text-align:left;border-bottom:1px solid #b9cdbd}.kpi-help summary{cursor:pointer;min-height:36px;padding:8px 0;font-size:13px}.kpi-settle{min-height:44px;padding:10px;border:2px solid #78988e;background:#d5e6bf;color:#365241;box-shadow:3px 3px #b6c8aa}.kpi-reward{font-weight:700;color:#436a52}
+.pixel-arcade .tennis-field{background:#94c8ad;box-shadow:inset 0 0 0 12px #71a58d;user-select:none}
+.pixel-arcade .tennis-field:before{inset:18px;height:auto;border:3px solid #eaf4d7;background:none;box-shadow:none;pointer-events:none}
+.pixel-arcade .tennis-ball{width:22px;height:22px;background:#d8ed67;border:2px solid #8ba545;box-shadow:inset -3px -3px #afcc4f;overflow:hidden}
+.tennis-ball:before,.tennis-ball:after{content:'';position:absolute;top:-2px;width:10px;height:22px;border:2px solid #fffce2;border-radius:50%;transform:rotate(-25deg)}
+.tennis-ball:before{left:-7px}.tennis-ball:after{right:-7px}
+.pixel-arcade .tennis-racket{width:23%;height:30px;transform:translate(-50%,-2px);border:4px solid #dd8eaa;border-radius:40%;background:repeating-linear-gradient(0deg,transparent 0 4px,#f6f1d7 4px 5px),repeating-linear-gradient(90deg,#719b9466 0 5px,#f6f1d7 5px 6px);box-shadow:0 3px #8c637f;overflow:visible}
+.tennis-racket:after{content:'';position:absolute;left:calc(50% - 4px);top:24px;width:8px;height:23px;background:repeating-linear-gradient(0deg,#526d82 0 4px,#8daabb 4px 6px);box-shadow:2px 2px #456076}
 .mouse-wordmark{display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-width:0}
 .mouse-wordmark img{display:block;width:250px;max-width:100%;height:auto;aspect-ratio:350/88;image-rendering:pixelated;object-fit:contain}
 .menu-card .mouse-wordmark{justify-content:center;gap:8px;margin-bottom:16px}.menu-card .mouse-wordmark img{width:350px}
@@ -6486,10 +6499,15 @@ button{touch-action:manipulation;letter-spacing:0}button:focus-visible{outline:3
 
 
 
+
+
+
+
+
 // demo-v2-start
 const demoRules={"initialCash":4000,"dailyCost":40,"dailyClean":2,"rent":3000,"utilities":320,"anxietyCash":2500,"anxietyMood":1,"sportHealth":45,"sportCooldown":7,"forcedClean":20,"lifeChance":0.55};
 const demoSalaries=[{"min":0,"pay":7200},{"min":40,"pay":7600},{"min":60,"pay":8000},{"min":75,"pay":8400},{"min":90,"pay":8800}];
-const demoEndingRules=[{"metric":"mood","op":"lt","value":35,"icon":"心","title":"未来：需要休息","copy":"这个月你常常觉得喘不过气。如果一直这样工作，需要给自己留一段真正的休息时间。"},{"metric":"health","op":"lt","value":40,"icon":"健","title":"未来：身体亮红灯","copy":"身体已经反复提醒你休息。继续长期透支，可能会影响以后正常的工作和生活。"},{"metric":"peer","op":"lt","value":45,"icon":"锅","title":"未来：协作有隔阂","copy":"和同事的信任还不够。以后遇到问题，需要更清楚地保留记录、说明分工。"},{"metric":"cash","op":"gte","value":8600,"icon":"房","title":"未来：攒下第一笔钱","copy":"发薪和付完账单后，你仍留住了一笔积蓄。继续保持，买房的首付才会逐渐有着落。"},{"metric":"cash","op":"lt","value":2500,"icon":"钱","title":"未来：余额焦虑","copy":"结算后手头依然紧张。下一份收入到账前，还需要缩减一些额外支出。"},{"metric":"clean","op":"lt","value":25,"icon":"屋","title":"未来：房间需要整理","copy":"房间已经影响找东西和休息。需要给家务留一点固定时间。"},{"metric":"mood","op":"gte","value":80,"icon":"稳","title":"未来：还愿意期待明天","copy":"忙完工作，你还有精力见朋友、做喜欢的事。这样的节奏值得保留。"},{"metric":"peer","op":"gte","value":80,"icon":"友","title":"未来：有可靠的同事","copy":"及时沟通和互相帮忙，让你在组里建立了一些信任。"},{"metric":"health","op":"gte","value":85,"icon":"健","title":"未来：身体底子还在","copy":"你给吃饭、活动和睡眠留了时间。身体能比较从容地应付日常工作。"}];
+const demoEndingRules=[{"metric":"mood","op":"lt","value":35,"icon":"心","title":"未来：需要休息","copy":"这个月你常常觉得喘不过气。如果一直这样工作，需要给自己留一段真正的休息时间。"},{"metric":"health","op":"lt","value":40,"icon":"健","title":"未来：身体亮红灯","copy":"身体已经反复提醒你休息。继续长期透支，可能会影响以后正常的工作和生活。"},{"metric":"peer","op":"lt","value":45,"icon":"锅","title":"未来：协作有隔阂","copy":"和同事的信任还不够。以后遇到问题，需要更清楚地保留记录、说明分工。"},{"metric":"cash","op":"gte","value":8600,"icon":"房","title":"未来：攒下第一笔钱","copy":"发薪和付完账单后，你仍留住了一笔积蓄。继续保持，买房的首付才会逐渐有着落。"},{"metric":"cash","op":"lt","value":2500,"icon":"钱","title":"未来：余额焦虑","copy":"结算后手头依然紧张。下一份收入到账前，还需要缩减一些额外支出。"},{"metric":"clean","op":"lt","value":25,"icon":"屋","title":"未来：房间需要整理","copy":"房间已经影响找东西和休息。需要给家务留一点固定时间。"},{"metric":"mood","op":"gte","value":80,"icon":"稳","title":"未来：还愿意期待明天","copy":"忙完工作，你还有精力见朋友、做喜欢的事。这样的节奏值得保留。"},{"metric":"peer","op":"gte","value":80,"icon":"友","title":"未来：有可靠的同事","copy":"及时沟通和互相帮忙，让你在组里建立了一些信任。"},{"metric":"health","op":"gte","value":85,"icon":"健","title":"未来：身体底子还在","copy":"你给吃饭、活动和睡眠留了时间。身体能比较从容地应付日常工作。"},{"metric":"mood","op":"range","value":35,"max":80,"icon":"茶","title":"未来：慢慢找到节奏","copy":"有的日子烦得不想说话，也有下班后松一口气的时候。以后继续给自己留一点空闲，生活不必每天都围着工作转。"},{"metric":"health","op":"range","value":40,"max":85,"icon":"饭","title":"未来：记得按时吃饭","copy":"身体还能应付日常，但熬夜后已经会觉得累。以后少凑合几顿饭、早点睡，才能把这个状态慢慢养回来。"},{"metric":"peer","op":"range","value":45,"max":80,"icon":"聊","title":"未来：从点头之交开始","copy":"你和同事还没熟到无话不谈，但已经能正常商量事情。以后一起吃几次午饭、把交接做好，也许会多几个聊得来的人。"},{"metric":"cash","op":"range","value":2500,"max":8600,"icon":"账","title":"未来：日子有本小账","copy":"付完这个月的账单，你还留着一笔生活费。离大额存款还有距离，接下来先把每个月的钱安排明白。"},{"metric":"clean","op":"gte","value":60,"icon":"窗","title":"未来：出租屋也是家","copy":"衣服有地方放，桌面能摆下一顿饭，回来不用先跨过垃圾袋。以后无论住在哪里，你都知道怎么给自己留一个舒服的角落。"},{"metric":"work","op":"range","value":55,"max":90,"icon":"本","title":"未来：手里有点真本事","copy":"你已经能把分到的事情做完，也知道卡住时该问谁。以后再遇到类似任务，不用每一步都从头摸索。"}];
 const demoSpecials=[{"tag":"保健品推销","title":"保健品推销","body":"下班路上，一家店的销售说你看起来很疲惫，邀请你做免费检测。检测后，他推荐了两百多元的保健品。","reason":"购买保健品不直接恢复健康；门诊花费产生就医记录。","choices":[["不买，去社区门诊咨询身体不适",0,0,-80,0,3,0],["买一小盒试试",0,0,-128,0,0,0],["礼貌拒绝，回家休息",0,1,0,0,1,0]],"id":"supplement","metric":"health","threshold":40,"styles":["steady","steady","steady"]},{"tag":"朋友散步","title":"朋友散步","body":"你今天不太想回工作消息。朋友问你要不要下楼走走，说他也正好需要透透气。","reason":"朋友支持小幅改善心态，不改变同事认可度。","choices":[["下楼和朋友散步半小时",0,3,0,0,1,0],["关掉工作通知，早点休息",0,2,0,0,2,0],["先回复必要消息，再去休息",0,0,0,0,0,0]],"id":"quiet","metric":"mood","threshold":35,"styles":["steady","steady","steady"]},{"tag":"房东提醒","title":"房东提醒","body":"房东检查水管时看见门口放着几袋垃圾，提醒你尽快清走，别把公共过道堵住。","reason":"收拾只适度增加整洁；请人帮忙需支付实际服务费。","choices":[["先把垃圾拿下楼，再整理过道",0,-1,0,0,0,5],["约一次钟点保洁",0,1,-80,0,0,6],["先清走公共过道里的东西",0,-1,0,0,0,3]],"id":"landlord","metric":"clean","threshold":20,"styles":["steady","steady","steady"]}];
 specialEvents.splice(0,specialEvents.length,...demoSpecials.map(e=>({...e,eligible:()=>state[e.metric]<e.threshold})));
     function demoState() {
@@ -6711,13 +6729,18 @@ specialEvents.splice(0,specialEvents.length,...demoSpecials.map(e=>({...e,eligib
       demoState().settlement={meta:`工资 +${pay} · 房租 -${demoRules.rent} · 水电 -${demoRules.utilities}${v[2]?` · 其他收支 ${signed(v[2])}`:''}${p.cash?` · 门诊 ${p.cash}`:''}`,copy:`${event?.body || '本月没有额外收支。'}${p.copy}每天的基本开销已经按日记账。`};
       saveGame();return demoState().settlement;
     };
+    function restartAchievement(){return {icon:'芽',title:'未来：换个地方重新出发',copy:'这份工作没有走到最后，但你更清楚自己能承受什么、需要什么。先安顿好生活，下一次可以换一种开始。'};}
+    function matchesEndingRule(item){
+      const value=state[item.metric];
+      return item.op==='range'?value>=item.value&&value<item.max:item.op==='gte'?value>=item.value:value<item.value;
+    }
     endingProfile=function(){
       const reality=state.work<55?{icon:'未',title:'现实：暂未达到转正要求',copy:'导师认为你还不能稳定完成岗位任务。接下来需要补齐基础能力，或者重新考虑岗位选择。'}:state.work>=90?{icon:'优',title:'现实：获得优秀评价',copy:'你能按时交付，也能主动处理问题。导师在这个月的试用反馈里给了你优秀评价。'}:{icon:'转',title:'现实：转正进展顺利',copy:'你已经逐渐适应岗位，交付和沟通都达到了当前要求。继续保持，后续转正会更稳妥。'};
       const achievements=[];
       for(const item of demoEndingRules) {
-        const value=state[item.metric];
-        if(item.op==='gte'?value>=item.value:value<item.value) achievements.push({icon:item.icon,title:item.title,copy:item.copy});
+        if(matchesEndingRule(item)) achievements.push({icon:item.icon,title:item.title,copy:item.copy});
       }
+      if(!achievements.length)achievements.push(restartAchievement());
       return {reality,achievements,title:reality.title,summary:'这个月结束了，以下是你达成的结果。'};
     };
     function presentAchievements(items) {demoState().achievements=items;demoState().achievementIndex=0;state.done=true;showAchievementPage();saveGame();}
@@ -6758,7 +6781,7 @@ specialEvents.splice(0,specialEvents.length,...demoSpecials.map(e=>({...e,eligib
       attempt?.catch(()=>{if(!closed)notice.textContent='点击视频中的播放按钮即可观看，也可以跳过。';});
     }
     showYearEnd=function(){const profile=endingProfile();state.phase='finished';presentAchievements([profile.reality,...profile.achievements]);};
-    showBankruptcyResult=function(){state.phase='bankrupt';state.cash=0;state.nightMouse=false;extras().active=null;updateStatsOnly();presentAchievements([{icon:'归',title:'现实：先回老家',copy:'手上的钱已经不足以支付眼前的开销。你收好行李，决定先回家，再找下一份工作。'}]);};
+    showBankruptcyResult=function(){state.phase='bankrupt';state.cash=0;state.nightMouse=false;extras().active=null;updateStatsOnly();presentAchievements([{icon:'归',title:'现实：先回老家',copy:'手上的钱已经不足以支付眼前的开销。你收好行李，决定先回家，再找下一份工作。'},restartAchievement()]);};
     tutorialSteps=()=>[
       ['你的身份','你是一个试用期大厂运营鼠鼠，刚搬进城中村出租屋。白天处理工作，晚上安排自己的生活。'],
       ['试玩时间','Demo 从 9 月 1 日入职开始，共 28 天。工作日有白天和夜晚安排，周末只安排一次生活事件。'],
@@ -6775,17 +6798,20 @@ specialEvents.splice(0,specialEvents.length,...demoSpecials.map(e=>({...e,eligib
       document.getElementById('modeText').textContent=a.type==='sport'?'放松运动':'KPI 考核';
       updateStatsOnly();
       if(a.offer){
-        const body=a.type==='sport'?'这几天身体有些疲惫。社区运动角的志愿者邀请你参加接球练习，活动一下肩膀，也让自己休息一会儿。':'上级评价第一次达到 90。主管邀请你做一次 2048 小挑战，作为这次阶段考核的加分项。可以现在参加，也可以放弃这次加分。';
+        const body=a.type==='sport'?'这几天身体有些疲惫。社区运动角的志愿者邀请你参加接球练习，活动一下肩膀，也让自己休息一会儿。':`上级评价第一次达到90，主管邀请你参加一次2048加分考核。无需合成到2048，也可以随时退出结算。${kpiRulesMarkup()}`;
         renderChoiceScene(body,[['现在参加',0,0,0],['这次先不参加',0,0,0]],text=>{
           if(text==='这次先不参加')return endExtra('继续今天的安排。');
           a.offer=false;
-          if(a.type==='sport') Object.assign(a,{plate:.5,ballX:.15+Math.random()*.7,ballY:-.05,caught:0,total:0});
+          if(a.type==='sport') Object.assign(a,{plate:.5,plateY:.82,ballX:.15+Math.random()*.7,ballY:-.05,caught:0,total:0});
           else {a.grid=Array(16).fill(0);a.score=0;a.moves=0;spawnKpi(a);spawnKpi(a);}
           saveGame();renderExtra();
         });return;
       }
       if(a.type==='sport') return renderCatch(a);
       renderKpi(a);
+    }
+    function kpiRulesMarkup(){
+      return `<div class="kpi-rules"><table><thead><tr><th>最大数字</th><th>上级评价</th><th>心态</th></tr></thead><tbody><tr><td>小于128</td><td>不变</td><td>不变</td></tr><tr><td>128</td><td>+1</td><td>+1</td></tr><tr><td>256</td><td>+2</td><td>+2</td></tr><tr><td>512</td><td>+3</td><td>+3</td></tr><tr><td>1024</td><td>+4</td><td>+3</td></tr><tr><td>2048及以上</td><td>+5</td><td>+3</td></tr></tbody></table></div>`;
     }
     function kpiReward(grid=[]){
       const max=2**Math.max(1,...grid);
@@ -6802,31 +6828,48 @@ specialEvents.splice(0,specialEvents.length,...demoSpecials.map(e=>({...e,eligib
         const reward=kpiReward(extras().active.grid);
         demoState().flags.kpiPassed=reward.work>0;
         demoState().kpiResult=reward;
-        const before=state.work;
+        const before=state.work,beforeMood=state.mood;
         applyDelta(reward.work,reward.mood);
-        finishExtra(`本次最大数字为${reward.max}。${reward.work?state.work>before?`上级评价 +${state.work-before}（${before} → ${state.work}）。`:'上级评价已经达到100，本次不再增加。':'本次未达到加分档位，已有评价不变。'}考核已结算，继续今天的安排吧。`);
+        finishExtra(`本次最大数字为${reward.max}。${reward.work?state.work>before?`上级评价 +${state.work-before}（${before} → ${state.work}）。`:'上级评价已经达到100，本次不再增加。':'本次未达到加分档位，已有评价不变。'}${reward.mood?state.mood>beforeMood?`心态 +${state.mood-beforeMood}。`:'心态已经达到100，本次不再增加。':''}考核已结算，继续今天的安排吧。`);
       }
     }
     function catchTick(a,dt){
-      a.ballY+=dt*.42;
-      if(a.ballY>=.87){
-        if(Math.abs(a.ballX-a.plate)<=.135) a.caught++;
+      a.plateY ??= .82;
+      if(a.bounceRemaining>0){
+        a.bounceRemaining=Math.max(0,a.bounceRemaining-dt);
+        const p=1-a.bounceRemaining/.3;
+        a.ballY=a.bounceY-Math.sin(p*Math.PI)*.09;
+        if(a.bounceRemaining>0)return false;
+        if(a.total>=12)return true;
+        a.ballX=.12+Math.random()*.76;a.ballY=-.05;saveGame();return false;
+      }
+      const previous=a.ballY;a.ballY+=dt*.72;
+      if(previous<=a.plateY&&a.ballY>=a.plateY&&Math.abs(a.ballX-a.plate)<=.115){
+        a.caught++;a.total++;a.ballY=a.plateY;a.bounceY=a.plateY;a.bounceRemaining=.3;saveGame();return false;
+      }
+      if(a.ballY>=1.05){
         a.total++;
         if(a.total>=12)return true;
         a.ballX=.12+Math.random()*.76;a.ballY=-.05;saveGame();
       }
       return false;
     }
+    function moveTennisRacket(a,direction){
+      a.plateY ??= .82;
+      if(direction==='left'||direction==='right')a.plate=clamp(a.plate+(direction==='left'?-.08:.08),.12,.88);
+      else a.plateY=clamp(a.plateY+(direction==='up'?-.06:.06),.55,.88);
+    }
     function renderCatch(a){
       const scene=document.createElement('div');scene.className='day-scene mini-scene';
-      scene.innerHTML='<h2>接球练习</h2><p class="catch-score" aria-live="polite"></p><div class="catch-field" tabindex="0" aria-label="移动盘子接球，可用左右方向键"><div class="catch-ball"></div><div class="catch-plate"></div></div><div class="mini-controls"></div>';
+      a.plateY ??= .82;
+      scene.innerHTML='<h2>网球接球练习</h2><p class="catch-score" aria-live="polite"></p><div class="catch-field tennis-field" tabindex="0" aria-label="移动网球拍接球，可用WASD、上下左右方向键或拖动"><div class="catch-ball tennis-ball"></div><div class="catch-plate tennis-racket"></div></div><div class="mini-controls"></div>';
       board.appendChild(scene);
       const field=scene.querySelector('.catch-field'),ball=scene.querySelector('.catch-ball'),plate=scene.querySelector('.catch-plate'),score=scene.querySelector('.catch-score');
-      const update=()=>{ball.style.left=`${a.ballX*100}%`;ball.style.top=`${a.ballY*100}%`;plate.style.left=`${a.plate*100}%`;score.textContent=`已接住 ${a.caught} / 8 个 · 已落下 ${a.total} / 12 个`;};
-      const move=event=>{const r=field.getBoundingClientRect();a.plate=clamp((event.clientX-r.left)/r.width,.1,.9);update();};
+      const update=()=>{ball.style.left=`${a.ballX*100}%`;ball.style.top=`${a.ballY*100}%`;plate.style.left=`${a.plate*100}%`;plate.style.top=`${a.plateY*100}%`;plate.style.marginTop=a.bounceRemaining>0?'3px':'0';score.textContent=`已接住 ${a.caught} / 8 个 · 已落下 ${a.total} / 12 个`;};
+      const move=event=>{const r=field.getBoundingClientRect();a.plate=clamp((event.clientX-r.left)/r.width,.12,.88);a.plateY=clamp((event.clientY-r.top)/r.height,.55,.88);update();};
       field.onpointerdown=event=>{field.setPointerCapture(event.pointerId);move(event);};field.onpointermove=move;
       const controls=scene.querySelector('.mini-controls');
-      for(const [label,dir] of [['←',-1],['→',1]]){const b=document.createElement('button');b.textContent=label;b.title=dir<0?'向左移动':'向右移动';b.onclick=()=>{a.plate=clamp(a.plate+dir*.1,.1,.9);update();};controls.appendChild(b);}
+      for(const [label,dir] of [['←','left'],['↑','up'],['↓','down'],['→','right']]){const b=document.createElement('button');b.textContent=label;b.title={left:'球拍左移',right:'球拍右移',up:'球拍上移',down:'球拍下移'}[dir];b.onclick=()=>{moveTennisRacket(a,dir);update();};controls.appendChild(b);}
       const exit=document.createElement('button');exit.textContent='结束练习';exit.onclick=()=>finishDemoMinigame('sport',a.caught>=8);controls.appendChild(exit);
       update();let previous=0;
       function frame(t){
@@ -6850,7 +6893,9 @@ specialEvents.splice(0,specialEvents.length,...demoSpecials.map(e=>({...e,eligib
     }
     function renderKpi(a){
       const scene=document.createElement('div');scene.className='day-scene mini-scene';
-      scene.innerHTML=`<h2>2048 考核</h2><p>最大数字 ${kpiReward(a.grid).max} · 得分 ${a.score}</p><div class="kpi-grid" tabindex="0" aria-label="2048棋盘，使用WASD、方向键或上下左右滑动合并数字"></div><div class="mini-controls"></div>`;
+      const reward=kpiReward(a.grid);
+      scene.innerHTML=`<h2>2048 考核</h2><p>最大数字 ${reward.max} · 得分 ${a.score}</p><p class="kpi-reward">当前奖励：上级评价 +${Math.min(reward.work,100-state.work)} · 心态 +${Math.min(reward.mood,100-state.mood)}</p><button class="kpi-settle">退出并领取奖励</button><details class="kpi-help"><summary>考核规则与奖励</summary>${kpiRulesMarkup()}</details><div class="kpi-grid" tabindex="0" aria-label="2048棋盘，使用WASD、方向键或上下左右滑动合并数字"></div><div class="mini-controls"></div>`;
+      scene.querySelector('.kpi-settle').onclick=()=>finishDemoMinigame('kpi');
       const grid=scene.querySelector('.kpi-grid');
       a.grid.forEach(v=>{const tile=document.createElement('div');tile.className='kpi-cell';tile.dataset.level=Math.min(6,v);tile.textContent=v?2**v:'';grid.appendChild(tile);});
       let start=null;
@@ -6858,7 +6903,6 @@ specialEvents.splice(0,specialEvents.length,...demoSpecials.map(e=>({...e,eligib
       grid.onpointerup=event=>{if(!start||start[2]!==event.pointerId)return;const dx=event.clientX-start[0],dy=event.clientY-start[1];start=null;event.preventDefault();if(Math.max(Math.abs(dx),Math.abs(dy))<20)return;moveKpi(Math.abs(dx)>Math.abs(dy)?dx>0?'right':'left':dy>0?'down':'up');};
       grid.onpointercancel=grid.onlostpointercapture=()=>{start=null;};
       for(const [icon,dir] of [['←','left'],['↑','up'],['↓','down'],['→','right']]){const b=document.createElement('button');b.textContent=icon;b.title={left:'向左合并',right:'向右合并',up:'向上合并',down:'向下合并'}[dir];b.onclick=()=>moveKpi(dir);scene.querySelector('.mini-controls').appendChild(b);}
-      const stop=document.createElement('button');stop.textContent='结束考核并结算';stop.onclick=()=>finishDemoMinigame('kpi');scene.querySelector('.mini-controls').appendChild(stop);
       board.appendChild(scene);grid.focus();
     }
     function handleDemoMinigameKey(event){
@@ -6868,7 +6912,7 @@ specialEvents.splice(0,specialEvents.length,...demoSpecials.map(e=>({...e,eligib
       const dirs={ArrowLeft:'left',ArrowRight:'right',ArrowUp:'up',ArrowDown:'down',w:'up',a:'left',s:'down',d:'right'};
       const direction=dirs[event.key]||dirs[event.key?.toLowerCase()];
       if(a.type==='kpi' && direction){event.preventDefault();moveKpi(direction);}
-      if(a.type==='sport' && ['ArrowLeft','ArrowRight'].includes(event.key)){event.preventDefault();a.plate=clamp(a.plate+(event.key==='ArrowLeft'?-.1:.1),.1,.9);}
+      if(a.type==='sport' && direction){event.preventDefault();moveTennisRacket(a,direction);}
     }
     window.addEventListener('keydown',handleDemoMinigameKey);
 
@@ -7303,13 +7347,28 @@ const introMouseData="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABMEAAAUNCAYA
     const achievementArtKeys={
       '现实：暂未达到转正要求':'review','现实：转正进展顺利':'badge','现实：获得优秀评价':'trophy','现实：先回老家':'home',
       '未来：需要休息':'bed','未来：身体亮红灯':'medical','未来：协作有隔阂':'broken','未来：攒下第一笔钱':'savings',
-      '未来：余额焦虑':'wallet','未来：房间需要整理':'room','未来：还愿意期待明天':'sun','未来：有可靠的同事':'friends','未来：身体底子还在':'heart'
+      '未来：余额焦虑':'wallet','未来：房间需要整理':'room','未来：还愿意期待明天':'sun','未来：有可靠的同事':'friends','未来：身体底子还在':'heart',
+      '未来：慢慢找到节奏':'tea','未来：记得按时吃饭':'meal','未来：从点头之交开始':'chat','未来：日子有本小账':'ledger','未来：出租屋也是家':'plant','未来：手里有点真本事':'skills','未来：换个地方重新出发':'sprout'
     };
     function achievementPixelArt(key){
       const ink='#506572',pink='#edacbb',mint='#add6bb',gold='#f2d17f',paper='#fff7df',blue='#a9d6e8';
       let parts='';const r=(x,y,w,h,color)=>parts+=`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${color}"/>`;
       const mouse=(x,y)=>{r(x,y,6,6,pink);r(x+14,y,6,6,pink);r(x+2,y+4,16,14,ink);r(x+4,y+5,12,11,paper);r(x+6,y+9,2,2,ink);r(x+12,y+9,2,2,ink);r(x+9,y+13,3,2,pink);};
-      if(key==='badge'||key==='review'){
+      if(key==='tea'){
+        r(12,24,33,25,ink);r(15,27,27,19,blue);r(45,28,10,15,ink);r(45,31,7,9,paper);r(9,50,42,4,mint);r(21,10,3,8,pink);r(30,7,3,10,pink);r(24,31,6,9,paper);
+      }else if(key==='meal'){
+        r(12,28,40,8,paper);r(15,36,34,14,pink);r(20,50,24,4,ink);r(18,23,26,5,paper);r(26,20,10,6,gold);r(38,12,3,20,ink);r(45,10,3,21,ink);r(22,40,4,3,ink);r(38,40,4,3,ink);
+      }else if(key==='chat'){
+        r(9,6,44,22,ink);r(12,9,38,16,blue);for(const x of [19,29,39])r(x,15,3,3,ink);r(17,28,6,6,ink);mouse(20,36);
+      }else if(key==='ledger'){
+        r(12,8,39,48,ink);r(16,11,32,42,mint);for(let y=17;y<45;y+=9){r(21,y,16,3,paper);r(40,y,4,3,gold);}r(9,17,8,3,ink);r(9,39,8,3,ink);
+      }else if(key==='plant'){
+        r(9,8,44,35,ink);r(12,11,38,29,blue);r(30,11,3,29,paper);r(12,24,38,3,paper);r(8,43,48,4,gold);r(20,45,23,13,pink);r(29,31,4,16,ink);r(19,31,11,7,mint);r(32,26,12,8,mint);
+      }else if(key==='skills'){
+        r(9,12,46,43,ink);r(12,15,19,36,blue);r(33,15,19,36,paper);r(18,24,7,3,paper);r(18,31,7,3,paper);r(37,24,10,3,mint);r(37,31,10,3,mint);r(40,40,4,7,mint);r(44,36,4,7,mint);
+      }else if(key==='sprout'){
+        r(11,49,43,6,gold);r(29,25,5,25,ink);r(13,21,16,9,mint);r(18,29,11,5,mint);r(34,13,18,11,mint);r(34,24,11,6,mint);r(27,53,10,4,pink);r(9,10,4,4,gold);
+      }else if(key==='badge'||key==='review'){
         r(23,5,18,8,ink);r(26,5,12,5,blue);r(13,14,38,44,ink);r(16,17,32,38,paper);r(23,12,18,6,key==='badge'?mint:pink);mouse(21,22);
         r(21,43,22,3,blue);r(21,49,15,3,blue);
         if(key==='badge'){r(42,42,4,9,mint);r(46,38,4,8,mint);r(38,46,4,4,mint);}else{r(41,40,4,9,pink);r(41,52,4,3,pink);}
@@ -7353,6 +7412,47 @@ const introMouseData="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABMEAAAUNCAYA
         const tag=document.createElement('span');tag.className='demo-tag';tag.textContent='DEMO';heading.appendChild(tag);
       }
     }
+
+    const miniExperienceSchedule=[
+      {type:'blame',day:3,phases:['dayWork']},
+      {type:'sport',day:5,phases:['night']},
+      {type:'mouse',day:9,phases:['night']},
+      {type:'food',day:14,phases:['life','weekend']}
+    ];
+    function playedMinigames(){return demoState().playedMinigames ||= {};}
+    const optionalMiniTrigger=maybeExtra;
+    maybeExtra=function(){
+      if(extras().active)return true;
+      const due=miniExperienceSchedule.find(s=>!playedMinigames()[s.type]&&state.day>=s.day&&s.phases.includes(state.phase));
+      if(due&&!state.nightMouse){
+        const a={type:due.type,offer:true,guaranteed:true};
+        if(a.type==='blame')a.caseIndex=Math.floor(Math.random()*blameCases.length);
+        if(a.type==='mouse'){state.nightMouse=true;state.mouse={};extras().mouseAccepted=false;}
+        if(a.type==='sport')demoState().sportDay=state.day;
+        extras().active=a;extras().cooldown[a.type]=dayNumber();
+        extras().seen[`${state.month}-${state.day}-${state.phase}`]=true;
+        if(a.type==='food')claimFood(a);
+        saveGame();return true;
+      }
+      return optionalMiniTrigger();
+    };
+    const optionalMiniChoice=renderChoiceScene;
+    renderChoiceScene=function(body,choices,onPick){
+      const a=extras().active;
+      if(a&&miniExperienceSchedule.some(s=>s.type===a.type)&&!playedMinigames()[a.type]&&(a.offer||a.type==='mouse')){
+        const firstOnly=choices.slice(0,1);
+        if(a.guaranteed){
+          body=({blame:'组里做了一次发布记录复盘。导师让你核对三位同事的说法，找出其中不属实的一句。',sport:'下班后，同事约你去社区运动角活动一下。今天试试接球练习，松一松坐了一天的肩膀。',mouse:'回家放包时，你看见一只老鼠钻到了纸箱后面。先把它从房间里赶出去，再安心休息。',kpi:'导师安排了一次阶段考核：用2048小游戏练习规划和取舍，结束后按最大数字结算加分。'})[a.type]||body;
+        }
+        return optionalMiniChoice(body,firstOnly,(...args)=>{playedMinigames()[a.type]=true;saveGame();onPick(...args);});
+      }
+      return optionalMiniChoice(body,choices,onPick);
+    };
+    // Loaded in-progress games count as experienced, including older saves.
+    const experienceRenderExtra=renderExtra;
+    renderExtra=function(...args){const a=extras().active;if(a&&!a.offer&&['food','sport','kpi','blame'].includes(a.type)){playedMinigames()[a.type]=true;saveGame();}return experienceRenderExtra(...args);};
+    const experienceRenderMouse=renderMouse;
+    renderMouse=function(...args){playedMinigames().mouse=true;saveGame();return experienceRenderMouse(...args);};
 
 // demo-v2-end
     bindPress("saveExitBtn", saveAndExit);
